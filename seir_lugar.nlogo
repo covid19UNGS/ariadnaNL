@@ -40,8 +40,10 @@ to setup-ini
   ;;
   ;; 2/3 de casas 1/3 de trabajos 1 hospital
   ;;
-  set cant-trabajos total-patches / 3 - 1
-  set cant-casas total-patches - cant-trabajos
+  set cant-trabajos total-patches / 3
+  set cant-casas total-patches - cant-trabajos - 1
+
+  ;; show (word cant-trabajos " " cant-casas)
 
   ask n-of cant-casas patches [
     set lugar 1
@@ -345,11 +347,11 @@ end
 GRAPHICS-WINDOW
 355
 10
-767
-423
+783
+439
 -1
 -1
-4.0
+20.0
 1
 10
 1
@@ -359,10 +361,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--50
-50
--50
-50
+-10
+10
+-10
+10
 0
 0
 1

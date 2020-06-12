@@ -24,6 +24,8 @@ globals [ total-patches
           lambda_h             ; periodo-pre-hospitalizacion ( asintomatico - presintomatico)
           rho_d                ; hospitalizacion de los que fallecen
           rho_r                ; hospitalizacion de los recuperados
+          nro-fallecidos       ;
+          nro-recuperados      ;
 
 ]
 
@@ -58,8 +60,8 @@ to setup-ini
   ;; Poner las personas en las casas
   ;;
   ask patches with [lugar = 1] [
-
-      sprout-personas max-personas-por-casa [
+      let personas-por-casa (1 + random max-personas-por-casa)
+      sprout-personas personas-por-casa [
         set size .5
         set donde 1
         set estado 1 ;; suceptible
@@ -70,13 +72,17 @@ to setup-ini
       ]
 
   ]
-  set gamma 1 / periodo-latencia
-  set lambda_p 1 / periodo-presintomatico
-  set lambda_a 1 / periodo-asintomatico
+  set gamma    1 - exp ( - 1 / periodo-latencia )
+  set lambda_p 1 - exp ( - 1 / periodo-presintomatico )
+  set lambda_a 1 - exp ( - 1 / periodo-asintomatico )
+
   let periodo-hospitalizacion periodo-asintomatico - periodo-presintomatico
-  set lambda_h 1 / periodo-hospitalizacion
-  set rho_d 1 / periodo-hospitalizacion-fallecido
-  set rho_r 1 / periodo-hospitalizacion-recuperado
+  set lambda_h 1 - exp ( - 1 /  periodo-hospitalizacion )
+
+  set rho_d    1 - exp ( - 1 / periodo-hospitalizacion-fallecido )
+  set rho_r    1 - exp ( - 1 / periodo-hospitalizacion-recuperado )
+
+  set horas-de-dormir 8
 
 end
 
@@ -85,22 +91,15 @@ end
 ;;
 to setup
   setup-ini
-  set horas-de-dormir 8
 
+  ;; inicializa con Latentes
+  ;;
   ask n-of infectados-iniciales personas
   [
-    set estado 3
+    set estado 2
     set-color-persona
-  ] ;; inicializa con 1 infectado
-
-  ask patches [
-    let nro-infectados count personas-here with [estado > 2 and estado < 6]
-    set nro-personas count personas-here
-    if nro-personas > 0
-    [
-      set mu_ie  beta * nro-infectados / nro-personas ;;* prop-horas-en-trabajo
-    ]
   ]
+
   reset-ticks
 
 end
@@ -109,11 +108,14 @@ to go
 
   ;; Calcula proporcion de horas en casa o trabajo
   ;;
-  set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo
+  set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo - horas-en-viaje
   let prop-horas-en-trabajo horas-en-trabajo / ( 24 - horas-de-dormir )
   let prop-horas-en-casa horas-en-casa / ( 24 - horas-de-dormir )
+  let prop-horas-en-viaje horas-en-viaje / ( 24 - horas-de-dormir )
 
   ;;print (word "Prop trabajo: " prop-horas-en-trabajo)
+  ;;print (word "Prop casa: " prop-horas-en-casa)
+  ;;print (word "Prop viaje: " prop-horas-en-viaje)
 
   if ticks = 365 ;; simulation runs for 365 days
   [
@@ -124,7 +126,11 @@ to go
   ;;
   ask personas [
     ir-al-trabajo
- ]
+  ]
+  ;;
+  ;; La infección en el viaje toma la proporcion de infectados 3 y 4 globales
+  ;;
+  infeccion-viaje prop-horas-en-viaje
 
   ;;
   ;; Infeccion en el trabajo
@@ -137,13 +143,13 @@ to go
  ;;
  ;; Infeccion en casa
  ;;
- infeccion-local prop-horas-en-casa
+ infeccion-local-estado prop-horas-en-casa
 
   tick
 end
 
 to ir-al-trabajo
-    if estado < 6 [                ; 1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
+    if estado < 5 [                ; 1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
     ;;
     ;; La primera vez asigna el lugar de trabajo
     ;;
@@ -178,6 +184,12 @@ to volver-a-casa
         fd 0.2
         set donde 1
       ]
+      donde = 3 [
+        move-to mi-casa
+        rt 10
+        fd 0.2
+        set donde 1
+      ]
       donde = 1 [
             ;;show "Alguien se quedó en casa"
           ]
@@ -200,23 +212,51 @@ to volver-a-casa
   ]
   estado = 7 [
     set nro-personas nro-personas - 1
-    show "Alguien se murió"
+    set nro-fallecidos nro-fallecidos + 1
+    ;;show "Alguien se murió"
     die
   ])
 
 end
+
 
 ;;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
 ;;
 to infeccion-local [prop-horas]
 
   ask patches [
-    let nro-infectados count personas-here with [estado = 3 or estado = 4]
+    let nro-infectores count personas-here with [estado > 2 and estado < 6]
     set nro-personas count personas-here
     if nro-personas > 0
     [
-      set mu_ie  beta * nro-infectados / nro-personas * prop-horas
-      ;show (word "N: " nro-personas " I: " nro-infectados " mu_ie: " mu_ie )
+      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
+      ;;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
+    ]
+  ]
+  ask personas [
+    if estado = 1 [ ;; Suceptible
+
+      if random-float 1 < mu_ie [
+
+        set estado 2
+        ;;show (word "Clocal 1 N: " nro-personas " mu_ie: " mu_ie )
+
+      ]
+    ]
+  ]
+end
+
+;;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
+;;
+to infeccion-local-estado [prop-horas]
+
+  ask patches [
+    let nro-infectores count personas-here with [estado > 2 and estado < 6]
+    set nro-personas count personas-here
+    if nro-personas > 0
+    [
+      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
+      ;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
   ask personas [
@@ -225,8 +265,8 @@ to infeccion-local [prop-horas]
       if random-float 1 < mu_ie [
 
         set estado 2
-        ;show "CONTAGIO!!!!!!!!!!!!!!1"
-        ;show (word "N: " nro-personas " mu_ie: " mu_ie " E: " estado)
+        ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
+
 
       ]
      ]
@@ -251,6 +291,7 @@ to infeccion-local [prop-horas]
         if random-float 1 < lambda_a
         [
           set estado 8
+          set nro-recuperados nro-recuperados + 1
         ]
      ]
      estado = 5 [
@@ -260,13 +301,14 @@ to infeccion-local [prop-horas]
         ]
      ]
      estado = 6 [
-        if-else random-float 1 > proporcion-fallecimiento-hospitalizados [
+        if-else random-float 1 < proporcion-fallecimiento-hospitalizados [
           if random-float 1 > rho_d [
              set estado 7
           ]
         ][
           if random-float 1 > rho_r [
             set estado 8
+            set nro-recuperados nro-recuperados + 1
           ]
         ]
      ]
@@ -276,18 +318,38 @@ to infeccion-local [prop-horas]
   ]
 
 end
+
+to infeccion-viaje [prop-horas]
+
+  let nro-total-infectores count personas with [estado = 3 or estado = 4]
+  let nro-total-personas count personas
+  let mu_vi  1 - exp( - beta * nro-total-infectores / nro-total-personas * prop-horas)
+  ;print (word "N: " nro-total-personas "I " nro-total-infectores "\n mu_vi: " mu_vi)
+  ask personas [
+    if estado = 1 [ ;; Suceptible
+
+      if random-float 1 < mu_vi [
+
+        set estado 2
+        ;;show (word "Cviaje N: " nro-total-infectores  " mu_vi: " mu_vi )
+
+      ]
+    ]
+  ]
+end
+
 to set-color-persona
   set color scale-color red estado 0 ( 8 + 1 )
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-260
+355
 10
-610
-361
+767
+423
 -1
 -1
-15.0
+4.0
 1
 10
 1
@@ -297,10 +359,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--11
-11
--11
-11
+-50
+50
+-50
+50
 0
 0
 1
@@ -323,10 +385,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-365
-410
-438
-443
+240
+150
+313
+183
 NIL
 setup
 NIL
@@ -341,24 +403,24 @@ NIL
 
 SLIDER
 10
-170
+210
 185
-203
+243
 beta
 beta
 0
 1
-0.56
+0.44
 .01
 1
 NIL
 HORIZONTAL
 
 BUTTON
-445
-410
-508
-443
+240
+190
+303
+223
 NIL
 go
 T
@@ -388,14 +450,14 @@ HORIZONTAL
 
 SLIDER
 10
-210
+250
 202
-243
+283
 periodo-latencia
 periodo-latencia
 1
 6
-4.6
+3.6
 .1
 1
 NIL
@@ -432,9 +494,9 @@ NIL
 HORIZONTAL
 
 MONITOR
-785
+875
 10
-917
+1007
 55
 Total de personas
 count personas
@@ -443,9 +505,9 @@ count personas
 11
 
 MONITOR
-920
+1010
 10
-1027
+1117
 55
 Total de casas
 cant-casas
@@ -454,10 +516,10 @@ cant-casas
 11
 
 BUTTON
-365
-450
-452
-483
+240
+230
+327
+263
 go step
 go
 NIL
@@ -471,9 +533,9 @@ NIL
 1
 
 PLOT
-640
-80
-1030
+875
+60
+1275
 335
 Casos
 NIL
@@ -486,20 +548,18 @@ true
 true
 "" ""
 PENS
-"Suceptibles" 1.0 0 -10873583 true "" "plot count personas with [estado = 1]"
 "Latentes" 1.0 0 -8053223 true "" "plot count personas with [estado = 2]"
 "Presintomatico" 1.0 0 -5298144 true "" "plot count personas with [estado = 3]"
 "Asintomatico" 1.0 0 -2674135 true "" "plot count personas with [estado = 4]"
 "Sintomatico" 1.0 0 -1604481 true "" "plot count personas with [estado = 5]"
 "Hospitalizado" 1.0 0 -534828 true "" "plot count personas with [estado = 6]"
-"Fallecido" 1.0 0 -66565 true "" "plot count personas with [estado = 7]"
-"Recuperado" 1.0 0 -6459832 true "" "plot count personas with [estado = 8]"
+"Fallecido" 1.0 0 -16449023 true "" "plot nro-fallecidos"
 
 SLIDER
 10
-250
+290
 247
-283
+323
 Proporcion-asintomaticos
 Proporcion-asintomaticos
 0
@@ -512,9 +572,9 @@ HORIZONTAL
 
 SLIDER
 10
-290
+330
 232
-323
+363
 periodo-presintomatico
 periodo-presintomatico
 1
@@ -527,9 +587,9 @@ HORIZONTAL
 
 SLIDER
 10
-330
+370
 217
-363
+403
 periodo-asintomatico
 periodo-asintomatico
 1
@@ -542,9 +602,9 @@ HORIZONTAL
 
 SLIDER
 10
-370
+410
 297
-403
+443
 periodo-hospitalizacion-fallecido
 periodo-hospitalizacion-fallecido
 1
@@ -557,14 +617,14 @@ HORIZONTAL
 
 SLIDER
 10
-450
+490
 347
-483
+523
 Proporcion-fallecimiento-hospitalizados
 Proporcion-fallecimiento-hospitalizados
 0
 1
-0.2
+0.1
 .1
 1
 NIL
@@ -572,9 +632,9 @@ HORIZONTAL
 
 SLIDER
 10
-410
+450
 317
-443
+483
 periodo-hospitalizacion-recuperado
 periodo-hospitalizacion-recuperado
 1
@@ -584,6 +644,109 @@ periodo-hospitalizacion-recuperado
 1
 NIL
 HORIZONTAL
+
+MONITOR
+1045
+450
+1157
+495
+Total Fallecidos
+nro-fallecidos
+2
+1
+11
+
+SLIDER
+10
+170
+182
+203
+Horas-en-viaje
+Horas-en-viaje
+0
+4
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+1045
+400
+1155
+445
+Hospitalizados
+count personas with [estado = 6]
+2
+1
+11
+
+MONITOR
+910
+350
+1025
+395
+Latentes
+count personas with [estado = 2]
+2
+1
+11
+
+MONITOR
+910
+400
+1027
+445
+Presintomaticos
+count personas with [estado = 3]
+2
+1
+11
+
+MONITOR
+910
+450
+1025
+495
+Asintomaticos
+count personas with [estado = 4]
+2
+1
+11
+
+MONITOR
+1045
+350
+1155
+395
+Sintomaticos
+count personas with [estado = 5]
+2
+1
+11
+
+MONITOR
+1045
+500
+1155
+545
+Recuperados
+nro-recuperados
+2
+1
+11
+
+MONITOR
+1135
+10
+1207
+55
+Letalidad
+nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
+3
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

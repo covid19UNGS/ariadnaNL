@@ -751,9 +751,9 @@ nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
 11
 
 @#$#@#$#@
-## WHAT IS IT?
+## Modelo de COVID - 19
 
-(a general understanding of what the model is trying to show or explain)
+Es un modelo que asume una red Bipartita de casas y trabajos, las personas van de sus casas al trabajo y se pueden contagiar en ambos lados, ademas tambien se pueden contagiar en el viaje.
 
 ## HOW IT WORKS
 

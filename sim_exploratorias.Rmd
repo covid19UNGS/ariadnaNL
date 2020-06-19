@@ -174,7 +174,7 @@ setsim(nl, "simoutput") <- results
 write_simoutput(nl)
 ```
 
-## Simulaciones en NetLogo con 301x301 parches 26934 casas 135000 personas
+## Simulaciones en NetLogo con 301x301 parches 60000 casas 333000 personas
 
 ```{r NL_experiment301, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
 
@@ -280,6 +280,9 @@ ggplot( res, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0
 
 
 ggplot( res_tot, aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ beta,scales = "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias")
+
+
+ggplot( res_tot, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ beta,scales = "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias")
 
 
 ```

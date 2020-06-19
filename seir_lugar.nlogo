@@ -1,7 +1,7 @@
 breed [personas persona]        ; living personas
 
 personas-own [ estado           ;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
-               donde
+               donde            ; 1 =casa  2=trabajo 3= hospital
 
                mi-casa
                mi-trabajo
@@ -26,6 +26,7 @@ globals [ total-patches
           rho_r                ; hospitalizacion de los recuperados
           nro-fallecidos       ;
           nro-recuperados      ;
+          nro-hospitalizados
 
 ]
 
@@ -77,9 +78,8 @@ to setup-ini
   set gamma    1 - exp ( - 1 / periodo-latencia )
   set lambda_p 1 - exp ( - 1 / periodo-presintomatico )
   set lambda_a 1 - exp ( - 1 / periodo-asintomatico )
-
-  let periodo-hospitalizacion periodo-asintomatico - periodo-presintomatico
-  set lambda_h 1 - exp ( - 1 /  periodo-hospitalizacion )
+  ;
+  set lambda_h 1 - exp ( - 1 /  periodo-hospitalizacion )    ;; Periodo entre que sos sintomatico y te hospitalizan
 
   set rho_d    1 - exp ( - 1 / periodo-hospitalizacion-fallecido )
   set rho_r    1 - exp ( - 1 / periodo-hospitalizacion-recuperado )
@@ -198,9 +198,9 @@ to volver-a-casa
       )
   ]
   estado = 5 [
-    move-to hospital
+    move-to mi-casa
     fd 0.2
-    set donde 3
+    set donde 2
     set nro-personas nro-personas + 1
   ]
   estado = 6 [
@@ -296,21 +296,41 @@ to infeccion-local-estado [prop-horas]
           set nro-recuperados nro-recuperados + 1
         ]
      ]
-     estado = 5 [
+     estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-saturado
         if random-float 1 < lambda_h
         [
           set estado 6
+          set nro-hospitalizados nro-hospitalizados + 1
         ]
      ]
      estado = 6 [
-        if-else random-float 1 < proporcion-fallecimiento-hospitalizados [
-          if random-float 1 > rho_d [
-             set estado 7
+        if-else nro-hospitalizados > capacidad-de-camas [
+          ;print "Estamos saturados!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          if-else random-float 1 < proporcion-fallecimiento-saturada [
+            if random-float 1 > rho_d [
+              set estado 7
+              set nro-hospitalizados nro-hospitalizados - 1
+            ]
+          ][
+            if random-float 1 > rho_r [
+              set estado 8
+              set nro-recuperados nro-recuperados + 1
+              set nro-hospitalizados nro-hospitalizados - 1
+            ]
           ]
+
         ][
-          if random-float 1 > rho_r [
-            set estado 8
-            set nro-recuperados nro-recuperados + 1
+          if-else random-float 1 < proporcion-fallecimiento-hospitalizados [
+            if random-float 1 > rho_d [
+              set estado 7
+              set nro-hospitalizados nro-hospitalizados - 1
+            ]
+          ][
+            if random-float 1 > rho_r [
+              set estado 8
+              set nro-recuperados nro-recuperados + 1
+              set nro-hospitalizados nro-hospitalizados - 1
+            ]
           ]
         ]
      ]
@@ -554,7 +574,7 @@ PENS
 "Presintomatico" 1.0 0 -5298144 true "" "plot count personas with [estado = 3]"
 "Asintomatico" 1.0 0 -2674135 true "" "plot count personas with [estado = 4]"
 "Sintomatico" 1.0 0 -1604481 true "" "plot count personas with [estado = 5]"
-"Hospitalizado" 1.0 0 -534828 true "" "plot count personas with [estado = 6]"
+"Hospitalizado" 1.0 0 -534828 true "" "plot nro-hospitalizados"
 "Fallecido" 1.0 0 -16449023 true "" "plot nro-fallecidos"
 
 SLIDER
@@ -604,9 +624,9 @@ HORIZONTAL
 
 SLIDER
 10
-410
+455
 297
-443
+488
 periodo-hospitalizacion-fallecido
 periodo-hospitalizacion-fallecido
 1
@@ -619,9 +639,9 @@ HORIZONTAL
 
 SLIDER
 10
-490
+535
 347
-523
+568
 Proporcion-fallecimiento-hospitalizados
 Proporcion-fallecimiento-hospitalizados
 0
@@ -634,24 +654,24 @@ HORIZONTAL
 
 SLIDER
 10
-450
+495
 317
-483
+528
 periodo-hospitalizacion-recuperado
 periodo-hospitalizacion-recuperado
 1
 15
-15.0
+14.9
 .1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-1045
-450
-1157
-495
+1010
+445
+1122
+490
 Total Fallecidos
 nro-fallecidos
 2
@@ -674,21 +694,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1045
-400
-1155
-445
-Hospitalizados
-count personas with [estado = 6]
-2
-1
-11
-
-MONITOR
-910
-350
-1025
-395
+875
+345
+990
+390
 Latentes
 count personas with [estado = 2]
 2
@@ -696,10 +705,10 @@ count personas with [estado = 2]
 11
 
 MONITOR
-910
-400
-1027
-445
+875
+395
+992
+440
 Presintomaticos
 count personas with [estado = 3]
 2
@@ -707,10 +716,10 @@ count personas with [estado = 3]
 11
 
 MONITOR
-910
-450
-1025
-495
+875
+445
+990
+490
 Asintomaticos
 count personas with [estado = 4]
 2
@@ -718,10 +727,10 @@ count personas with [estado = 4]
 11
 
 MONITOR
-1045
-350
-1155
-395
+1010
+345
+1120
+390
 Sintomaticos
 count personas with [estado = 5]
 2
@@ -729,10 +738,10 @@ count personas with [estado = 5]
 11
 
 MONITOR
-1045
-500
-1155
-545
+1010
+495
+1120
+540
 Recuperados
 nro-recuperados
 2
@@ -740,13 +749,69 @@ nro-recuperados
 11
 
 MONITOR
-1135
+1125
 10
-1207
+1197
 55
 Letalidad
 nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
 3
+1
+11
+
+SLIDER
+10
+410
+232
+443
+periodo-hospitalizacion
+periodo-hospitalizacion
+1
+15
+7.0
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+370
+495
+572
+528
+capacidad-de-camas
+capacidad-de-camas
+0
+1000
+11.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+370
+535
+667
+568
+proporcion-fallecimiento-saturada
+proporcion-fallecimiento-saturada
+0
+1
+0.5
+0.1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+1010
+395
+1142
+440
+NIL
+nro-hospitalizados
+2
 1
 11
 

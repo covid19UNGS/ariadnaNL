@@ -23,7 +23,7 @@ source("R/functions.R")
 # Unix default NetLogo installation path (adjust to your needs!):
 netlogopath <- file.path("/home/leonardo/NetLogo")
 simfolder <- "/home/leonardo/Dropbox/Projects/ariadnaNL"
-modelpath <- file.path(simfolder, "seir_lugar.nlogo")
+modelpath <- file.path(simfolder, "ariadnaNL.nlogo")
 outpath <- file.path(simfolder,"Simulations")
 
 # If not defined set the JAVA version of your local 
@@ -58,7 +58,11 @@ df <- cor %>% filter( osm_admin_level_4 =="CABA") %>% mutate(fecha=dmy(fecha), d
 
 ## Simulaciones en NetLogo con 101x101 parches 6800 casas 34000 personas
 
-```{r NL_experiment, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+* Tomando el $R_0$ mediana = 2, minimo= 1.5, maximo 2.4, usando un intervalo infecciosos de 5 Dias el parámetro $\beta$=[0.3,0.4,0.48]   
+
+* En argentina tendriamos 5 camas cada 1000 habitantes, para 34000 -> 170 redondeamos a 200
+
+```{r NL_experiment101, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
 
 
@@ -69,7 +73,7 @@ nl@experiment <- experiment(expname="world101_Beta40_50_viaje0_2",
                             idsetup="setup",
                             idgo="go",
                             runtime=365,
-                            metrics=c("count personas", "nro-recuperados", "nro-fallecidos" ),
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
                             variables = list("Horas-en-viaje" = list(min=0, max=2, step=1 , qfun="qunif"),
                                              "beta" = list(min=0.30, max=0.50, step=0.1, qfun="qunif")), 
                             constants = list("world-width" = 101,
@@ -82,9 +86,12 @@ nl@experiment <- experiment(expname="world101_Beta40_50_viaje0_2",
                                              "Proporcion-asintomaticos"=0.43,
                                              "periodo-presintomatico"=1.5,
                                              "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion"= 7.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
-                                             "Proporcion-fallecimiento-hospitalizados"= 0.1
+                                             "Proporcion-fallecimiento-hospitalizados"= 0.1,
+                                             "Proporcion-fallecimiento-saturada"= 0.5,
+                                             "capacidad-de-camas"= 200
                                              ))
 #
 # Set a full factorial design 
@@ -96,7 +103,7 @@ nl@simdesign <- simdesign_ff(nl=nl,nseeds=4)
 # run in Paralell 
 #
 require(future)
-plan(multisession,workers=24)
+plan(multisession,workers=4)
 require(tictoc)
 tic()
 results <- run_nl_all(nl,split = 1)
@@ -120,8 +127,9 @@ write_simoutput(nl)
 
 ## Simulaciones en NetLogo con 201x201 parches 26934 casas 135000 personas
 
-```{r NL_experiment1, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+* Nro de camas a 700
 
+```{r NL_experiment201, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
 
 
@@ -132,7 +140,7 @@ nl@experiment <- experiment(expname="world201_Beta40_50_viaje0_2",
                             idsetup="setup",
                             idgo="go",
                             runtime=365,
-                            metrics=c("count personas", "nro-recuperados", "nro-fallecidos" ),
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
                             variables = list("Horas-en-viaje" = list(min=0, max=2, step=1 , qfun="qunif"),
                                              "beta" = list(min=0.30, max=0.50, step=0.1, qfun="qunif")), 
                             constants = list("world-width" = 201,
@@ -145,10 +153,14 @@ nl@experiment <- experiment(expname="world201_Beta40_50_viaje0_2",
                                              "Proporcion-asintomaticos"=0.43,
                                              "periodo-presintomatico"=1.5,
                                              "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion"= 7.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
-                                             "Proporcion-fallecimiento-hospitalizados"= 0.1
+                                             "Proporcion-fallecimiento-hospitalizados"= 0.1,
+                                             "Proporcion-fallecimiento-saturada"= 0.5,
+                                             "capacidad-de-camas"= 700
                                              ))
+
 #
 # Set a full factorial design 
 #
@@ -176,8 +188,9 @@ write_simoutput(nl)
 
 ## Simulaciones en NetLogo con 301x301 parches 60000 casas 333000 personas
 
-```{r NL_experiment301, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+* Nro de camas 2000 (aprox 5 por 1000 hab) o 20000
 
+```{r NL_experiment301, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
 
 
@@ -188,9 +201,10 @@ nl@experiment <- experiment(expname="world301_Beta40_50_viaje0_2",
                             idsetup="setup",
                             idgo="go",
                             runtime=365,
-                            metrics=c("count personas", "nro-recuperados", "nro-fallecidos" ),
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
                             variables = list("Horas-en-viaje" = list(min=0, max=2, step=1 , qfun="qunif"),
-                                             "beta" = list(min=0.30, max=0.50, step=0.1, qfun="qunif")), 
+                                             "beta" = list(min=0.30, max=0.50, step=0.1, qfun="qunif"),
+                                             "capacidad-de-camas" = list(values=c(2000,20000))),
                             constants = list("world-width" = 301,
                                              "world-height" = 301,
                                              "infectados-iniciales" = 10,
@@ -201,10 +215,13 @@ nl@experiment <- experiment(expname="world301_Beta40_50_viaje0_2",
                                              "Proporcion-asintomaticos"=0.43,
                                              "periodo-presintomatico"=1.5,
                                              "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion"= 7.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
-                                             "Proporcion-fallecimiento-hospitalizados"= 0.1
+                                             "Proporcion-fallecimiento-hospitalizados"= 0.1,
+                                             "Proporcion-fallecimiento-saturada"= 0.5
                                              ))
+
 #
 # Set a full factorial design 
 #
@@ -231,6 +248,67 @@ write_simoutput(nl)
 ```
 
 
+## Simulaciones en NetLogo con 501x501 parches 60000 casas 840000 personas
+
+* Nro de camas 4200 (aprox 5 por 1000 hab) o 42000
+
+```{r NL_experiment501, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+
+
+
+nl@experiment <- experiment(expname="world501_Beta40_50_viaje0_2",
+                            outpath=outpath,
+                            repetition=1,
+                            tickmetrics="true",
+                            idsetup="setup",
+                            idgo="go",
+                            runtime=365,
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
+                            variables = list("Horas-en-viaje" = list(min=0, max=2, step=1 , qfun="qunif"),
+                                             "beta" = list(min=0.30, max=0.50, step=0.1, qfun="qunif"),
+                                             "capacidad-de-camas" = list(values=c(4200,42000))),
+                            constants = list("world-width" = 501,
+                                             "world-height" = 501,
+                                             "infectados-iniciales" = 10,
+                                             "max-personas-por-casa" = 10,
+                                             "max-personas-por-trabajo" = 100,
+                                             "Horas-en-trabajo"=8,
+                                             "periodo-latencia"=3.6,
+                                             "Proporcion-asintomaticos"=0.43,
+                                             "periodo-presintomatico"=1.5,
+                                             "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion"= 7.0,
+                                             "periodo-hospitalizacion-fallecido" = 13.2,
+                                             "periodo-hospitalizacion-recuperado" = 15,
+                                             "Proporcion-fallecimiento-hospitalizados"= 0.1,
+                                             "Proporcion-fallecimiento-saturada"= 0.5
+                                             ))
+
+#
+# Set a full factorial design 
+#
+nl@simdesign <- simdesign_ff(nl=nl,nseeds=4)
+
+#nl@simdesign <- simdesign_lhs(nl=nl,nseeds=1,samples=10000,precision=3)
+
+# run in Paralell 
+#
+require(future)
+plan(multisession,workers=24)
+require(tictoc)
+tic()
+results <- run_nl_all(nl,split = 9)
+toc()
+plan(sequential)
+names(results)
+
+#
+# Write the output
+#
+setsim(nl, "simoutput") <- results 
+write_simoutput(nl)
+```
+
 ## Plots 
 
 ```{r NL_plots, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
@@ -250,8 +328,6 @@ res <- read_netlogo_simul("Simulations/world101_Beta40_50_viaje0_2_ff.csv",skip 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
                                                 casos = nro_fallecidos+ nro_recuperados,
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas)) 
-res_tot <-  res
-
 ggplot( res, aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom")
 
 ggplot( res, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + scale_y_log10()
@@ -261,28 +337,53 @@ res <- read_netlogo_simul("Simulations/world201_Beta40_50_viaje0_2_ff.csv",skip 
                                                 casos = nro_fallecidos+ nro_recuperados,
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas))
 
-res_tot <-  bind_rows( res_tot, res)
+res_tot <-  res
 
 ggplot( res, aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom")
 
 ggplot( res, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + scale_y_log10()
+
+#
+# Con limite de camas
+#
 
 res <- read_netlogo_simul("Simulations/world301_Beta40_50_viaje0_2_ff.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
                                                 casos = nro_fallecidos+ nro_recuperados,
-                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas))
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                saturacion=ifelse(capacidad_de_camas==2000, "Saturado","No Saturado"))
 
-res_tot <-  bind_rows( res_tot, res)
+res_tot <-  bind_rows( res_tot, filter(res,saturacion=='No Saturado') )
 
-ggplot( res, aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom")
+ggplot( res %>% mutate(R0=beta*5), aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(saturacion~R0,scales= "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Días")
 
-ggplot( res, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + scale_y_log10()
+ggplot( res %>% mutate(R0=beta*5), aes(step,fatalidad, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(saturacion~R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") +  xlab("Días") + ylab("Fatalidad %")
+
+ggplot( res %>% mutate(R0=beta*5, saturacion=ifelse(capacidad_de_camas==2000, "Saturado","No Saturado")), aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(saturacion~R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + scale_y_log10()
 
 
-ggplot( res_tot, aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ beta,scales = "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias")
+res <- read_netlogo_simul("Simulations/world501_Beta40_50_viaje0_2_ff.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados,
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                saturacion=ifelse(capacidad_de_camas==4200, "Saturado","No Saturado"))
+
+res_tot <-  bind_rows( res_tot, filter(res,saturacion=='No Saturado') )
+
+ggplot( res %>% mutate(R0=beta*5), aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(saturacion~R0,scales= "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Días") + scale_y_log10()
+
+ggplot( res %>% mutate(R0=beta*5, saturacion=ifelse(capacidad_de_camas==4200, "Saturado","No Saturado")), aes(step,fatalidad, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(saturacion~R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") +  xlab("Días") + ylab("Fatalidad %")
 
 
-ggplot( res_tot, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ beta,scales = "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias")
+#
+# Totales sin restriccion de camas 
+#
+
+
+ggplot( res_tot %>% mutate(R0=beta*5), aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias") 
+
+
+ggplot( res_tot %>% mutate(R0=beta*5), aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ R0,scales = "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias")
 
 
 ```

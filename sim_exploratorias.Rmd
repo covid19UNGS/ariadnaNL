@@ -86,7 +86,7 @@ nl@experiment <- experiment(expname="world101_Beta40_50_viaje0_2",
                                              "Proporcion-asintomaticos"=0.43,
                                              "periodo-presintomatico"=1.5,
                                              "periodo-asintomatico"= 7.0,
-                                             "periodo-hospitalizacion"= 7.0,
+                                             "periodo-pre-hospitalizacion"= 3.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
                                              "Proporcion-fallecimiento-hospitalizados"= 0.1,
@@ -153,7 +153,7 @@ nl@experiment <- experiment(expname="world201_Beta40_50_viaje0_2",
                                              "Proporcion-asintomaticos"=0.43,
                                              "periodo-presintomatico"=1.5,
                                              "periodo-asintomatico"= 7.0,
-                                             "periodo-hospitalizacion"= 7.0,
+                                             "periodo-pre-hospitalizacion"= 3.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
                                              "Proporcion-fallecimiento-hospitalizados"= 0.1,
@@ -215,7 +215,7 @@ nl@experiment <- experiment(expname="world301_Beta40_50_viaje0_2",
                                              "Proporcion-asintomaticos"=0.43,
                                              "periodo-presintomatico"=1.5,
                                              "periodo-asintomatico"= 7.0,
-                                             "periodo-hospitalizacion"= 7.0,
+                                             "periodo-pre-hospitalizacion"= 3.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
                                              "Proporcion-fallecimiento-hospitalizados"= 0.1,
@@ -277,7 +277,7 @@ nl@experiment <- experiment(expname="world501_Beta40_50_viaje0_2",
                                              "Proporcion-asintomaticos"=0.43,
                                              "periodo-presintomatico"=1.5,
                                              "periodo-asintomatico"= 7.0,
-                                             "periodo-hospitalizacion"= 7.0,
+                                             "periodo-pre-hospitalizacion"= 3.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
                                              "Proporcion-fallecimiento-hospitalizados"= 0.1,
@@ -354,6 +354,7 @@ res <- read_netlogo_simul("Simulations/world301_Beta40_50_viaje0_2_ff.csv",skip 
                                                 saturacion=ifelse(capacidad_de_camas==2000, "Saturado","No Saturado"))
 
 res_tot <-  bind_rows( res_tot, filter(res,saturacion=='No Saturado') )
+res_sat <- filter(res,saturacion=='Saturado')
 
 ggplot( res %>% mutate(R0=beta*5), aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(saturacion~R0,scales= "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Días")
 
@@ -369,6 +370,7 @@ res <- read_netlogo_simul("Simulations/world501_Beta40_50_viaje0_2_ff.csv",skip 
                                                 saturacion=ifelse(capacidad_de_camas==4200, "Saturado","No Saturado"))
 
 res_tot <-  bind_rows( res_tot, filter(res,saturacion=='No Saturado') )
+res_sat <- bind_rows( res_sat, filter(res,saturacion=='Saturado'))
 
 ggplot( res %>% mutate(R0=beta*5), aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(saturacion~R0,scales= "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Días") + scale_y_log10()
 
@@ -379,11 +381,14 @@ ggplot( res %>% mutate(R0=beta*5, saturacion=ifelse(capacidad_de_camas==4200, "S
 # Totales sin restriccion de camas 
 #
 
-
-ggplot( res_tot %>% mutate(R0=beta*5), aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias") 
+res_tot <- res_tot %>% mutate(prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion)
+ggplot( res_tot %>% mutate(R0=beta*5), aes(step,prop_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias") + geom_hline(yintercept = prop_camas,linetype=3)
 
 
 ggplot( res_tot %>% mutate(R0=beta*5), aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ R0,scales = "free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias")
 
+
+res_sat <- res_sat %>% mutate(prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,R0=beta*5)
+ggplot( res_sat, aes(step,prop_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias") + geom_hline(aes(yintercept = prop_camas),linetype=3) + scale_y_log10()
 
 ```

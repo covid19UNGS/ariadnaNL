@@ -79,7 +79,7 @@ to setup-ini
   set lambda_p 1 - exp ( - 1 / periodo-presintomatico )
   set lambda_a 1 - exp ( - 1 / periodo-asintomatico )
   ;
-  set lambda_h 1 - exp ( - 1 /  periodo-hospitalizacion )    ;; Periodo entre que sos sintomatico y te hospitalizan
+  set lambda_h 1 - exp ( - 1 /  periodo-pre-hospitalizacion )    ;; Periodo entre que sos sintomatico y te hospitalizan
 
   set rho_d    1 - exp ( - 1 / periodo-hospitalizacion-fallecido )
   set rho_r    1 - exp ( - 1 / periodo-hospitalizacion-recuperado )
@@ -432,7 +432,7 @@ beta
 beta
 0
 1
-0.44
+0.34
 .01
 1
 NIL
@@ -646,8 +646,8 @@ Proporcion-fallecimiento-hospitalizados
 Proporcion-fallecimiento-hospitalizados
 0
 1
-0.1
-.1
+0.09
+.01
 1
 NIL
 HORIZONTAL
@@ -764,11 +764,11 @@ SLIDER
 410
 232
 443
-periodo-hospitalizacion
-periodo-hospitalizacion
+periodo-pre-hospitalizacion
+periodo-pre-hospitalizacion
 1
 15
-7.0
+3.0
 .1
 1
 NIL
@@ -783,7 +783,7 @@ capacidad-de-camas
 capacidad-de-camas
 0
 1000
-11.0
+225.0
 1
 1
 NIL

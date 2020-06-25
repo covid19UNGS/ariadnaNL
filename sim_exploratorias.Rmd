@@ -40,22 +40,6 @@ nl <- nl(nlversion = "6.1",
 ```
 
 
-## Lectura de archivo de datos
-
-```{r read_data, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
-
-# Falta leer archivo para comparar
-
-cor<-read_csv('https://docs.google.com/spreadsheets/d/16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA/export?format=csv&id=16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA&gid=0')
-
-# unique(cor$osm_admin_level_4)
-
-df <- cor %>% filter( osm_admin_level_4 =="CABA") %>% mutate(fecha=dmy(fecha), dias =as.numeric( fecha - min(fecha))) %>% 
-  rename(fallecidos=nue_fallecidos_diff,casos=nue_casosconf_diff) %>% select(fecha,dias,casos,fallecidos,transmision_tipo)
-
-
-```
-
 ## Simulaciones en NetLogo con 101x101 parches 6800 casas 34000 personas
 
 * Tomando el $R_0$ mediana = 2, minimo= 1.5, maximo 2.4, usando un intervalo infecciosos de 5 Dias el parámetro $\beta$=[0.3,0.4,0.48]   
@@ -127,7 +111,7 @@ write_simoutput(nl)
 
 ## Simulaciones en NetLogo con 201x201 parches 26934 casas 135000 personas
 
-* Nro de camas a 700
+* Nro de camas a 700  (aprox 5 por 1000 hab) o sin limitacion 7000
 
 ```{r NL_experiment201, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
@@ -252,7 +236,7 @@ write_simoutput(nl)
 
 * Nro de camas 4200 (aprox 5 por 1000 hab) o 42000
 
-```{r NL_experiment501, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+```{r NL_experiment501, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
 
 
@@ -391,4 +375,325 @@ ggplot( res_tot %>% mutate(R0=beta*5), aes(step,casos, colour=factor(Horas_en_vi
 res_sat <- res_sat %>% mutate(prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,R0=beta*5)
 ggplot( res_sat, aes(step,prop_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~ R0) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + xlab("Dias") + geom_hline(aes(yintercept = prop_camas),linetype=3) + scale_y_log10()
 
+```
+
+
+## Ajuste para CABA usando las simulaciones anteriores 
+
+* _Variables_: beta, Horas_en_viaje, poblacion, world_width
+
+* Uso los desde 20 dias posteriores al primer caso  
+
+```{r read_data_fit, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+# leer archivo para comparar
+
+cor<-read_csv('https://docs.google.com/spreadsheets/d/16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA/export?format=csv&id=16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA&gid=0')
+
+# unique(cor$osm_admin_level_4)
+
+pob_CABA <- 2890000
+df <- cor %>% filter( osm_admin_level_4 =="CABA") %>% mutate(fecha=dmy(fecha), dias =as.numeric( fecha - min(fecha)),prop_casos=cumsum(nue_casosconf_diff)/pob_CABA,casos=cumsum(nue_casosconf_diff),fallecidos=cumsum(nue_fallecidos_diff), prop_fallecidos=fallecidos/pob_CABA) %>% select(fecha,dias,casos,prop_casos,fallecidos,prop_fallecidos,nue_fallecidos_diff)
+
+# 
+# Ajuste a partir de 20 dias por numero de casos
+# 
+
+fit <- fit_ariadnaNL_simulations(df,40,0,res_tot,pob_CABA,15)
+
+fit$fit %>% distinct(beta,Horas_en_viaje,poblacion,world_width)
+
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred))
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30), aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3)
+
+ggplot(fit, aes(fecha,fallecidos_dia)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,nue_fallecidos_diff),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3)
+
+ggplot(fit, aes(fecha,nro_hospitalizados)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3)
+
+
+ggplot(fit, aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = fec_lim,color="black",linetype = 3)
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30) , aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() + geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3)
+
+ggplot(fit , aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() + geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3)
+
+
+
+
+
+```
+
+
+## Simulaciones para ajuste usando Latin Hypercubic Sampling 
+
+* Sin limitacion de camas 70000
+
+* _Variables_: beta, Horas_en_viaje, poblacion, world_width
+
+```{r gen_fit_lhs, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3",
+                            outpath=outpath,
+                            repetition=1,
+                            tickmetrics="true",
+                            idsetup="setup",
+                            idgo="go",
+                            runtime=365,
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
+                            variables = list("Horas-en-viaje" = list(min=0, max=3, qfun="qunif"),
+                                             "beta" = list(min=0.30, max=0.50, qfun="qunif"),
+                                             "Proporcion-fallecimiento-hospitalizados"= list(min=0.05, max=0.20,qfun="qunif"),
+                                             "periodo-pre-hospitalizacion"= list(min=2.0,max=5.0,qfun="qunif")),
+                            constants = list("world-width" = 201,
+                                             "world-height" = 201,
+                                             "infectados-iniciales" = 10,
+                                             "max-personas-por-casa" = 10,
+                                             "max-personas-por-trabajo" = 100,
+                                             "Horas-en-trabajo"=8,
+                                             "periodo-latencia"=3.6,
+                                             "Proporcion-asintomaticos"=0.43,
+                                             "periodo-presintomatico"=1.5,
+                                             "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion-fallecido" = 13.2,
+                                             "periodo-hospitalizacion-recuperado" = 15,
+                                             "Proporcion-fallecimiento-saturada"= 0.5,
+                                             "capacidad-de-camas"= 70000
+                                             ))
+
+#
+# Set a latin hypercubic design 
+#
+nl@simdesign <- simdesign_lhs(nl=nl,
+                               samples=300,
+                               nseeds=4,
+                               precision=2)
+
+# run in Paralell 
+#
+require(future)
+plan(multisession,workers=24)
+require(tictoc)
+tic()
+results <- run_nl_all(nl,split = 10)
+toc()
+plan(sequential)
+names(results)
+
+#
+# Write the output
+#
+setsim(nl, "simoutput") <- results 
+write_simoutput(nl)
+```
+
+## Ajuste usando los primeros 33 días
+
+* Faltaria calcular nro de hospitalizados con datos abiertos!!
+
+```{r fit_lhs, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+
+res <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_lhs.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados,
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion)
+
+#
+# Ajuste por suma de cuadrados, aqui tambien variamos la fecha de inicio de la epidemia
+#
+
+vec_sumsqr <- lapply( seq_len(20),function(x){ fit_ariadnaNL_simulations(df,20,0,res,pob_CABA,x)$fit %>% distinct(sumsqr)})
+df_sumsqr <- do.call("rbind", vec_sumsqr)
+which.min(df_sumsqr$sumsqr)
+
+#
+# Ajustando los primeros 33 dias
+#
+fit <- fit_ariadnaNL_simulations(df,0,80,res,pob_CABA,3) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,poblacion,world_width,periodo_pre_hospitalizacion,Proporcion_fallecimiento_hospitalizados)
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
+#
+# Guarda parametros
+#
+params <- fit %>% distinct(beta,Horas_en_viaje,poblacion,world_width,periodo_pre_hospitalizacion,Proporcion_fallecimiento_hospitalizados) %>% mutate(periodo_fit="0-33", fec_min=fec_min,fec_max=fec_lim)
+
+nombre_fases <- c("Cuarentena","Fase 2","Fase 3","Fase 4","ASPO/DISPO")
+fases <- tibble(fecha=c(ymd("2020-03-20"),ymd("2020-04-13"),ymd("2020-04-25"),ymd("2020-05-10"),ymd("2020-06-08")),
+                  nombre=nombre_fases)
+
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30), aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)  +  geom_vline(xintercept = fec_lim,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+ggplot(fit , aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = fec_lim,color="black",linetype = 3)  +  geom_vline(xintercept = c(fec_lim,fec_min) ,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ylab("Fallecidos CABA") + xlab("") + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+
+ggplot(fit, aes(fecha,hospitalizados_pred)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab("Hospitalizados CABA") + xlab("") + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30), aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = fec_lim,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+  geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) 
+
+ggplot(fit , aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() + geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab("Casos CABA") + xlab("") +  ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+```
+
+## Ajuste usando el rango de 33-63 días
+
+* Faltaria calcular nro de hospitalizados con datos abiertos!!
+
+```{r fit_lhs33-66, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+#
+# Ajustando del 33-63 dias
+#
+fit <- fit_ariadnaNL_simulations(df,33,50,res,pob_CABA,3) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,poblacion,world_width,periodo_pre_hospitalizacion,Proporcion_fallecimiento_hospitalizados)
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
+
+#
+# Guarda parametros
+#
+params <- bind_rows(params, fit %>% distinct(beta,Horas_en_viaje,poblacion,world_width,periodo_pre_hospitalizacion,Proporcion_fallecimiento_hospitalizados) %>% mutate(periodo_fit="33-63", fec_min=fec_min,fec_max=fec_lim))
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30), aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)  +  geom_vline(xintercept = fec_lim,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+ggplot(fit , aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = fec_lim,color="black",linetype = 3)  +  geom_vline(xintercept = c(fec_lim,fec_min) ,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ylab("Fallecidos CABA") + xlab("") + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+
+ggplot(fit, aes(fecha,hospitalizados_pred)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab("Hospitalizados CABA") + xlab("") + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30), aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = fec_lim,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+  geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) 
+
+ggplot(fit , aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() + geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab("Casos CABA") + xlab("") +  ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+```
+
+## Ajuste usando el rango de 63-93 días
+
+* Faltaria calcular nro de hospitalizados con datos abiertos!!
+
+```{r fit_lhs33-66, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+#
+# Ajustando del 33-63 dias
+#
+fit <- fit_ariadnaNL_simulations(df,63,20,res,pob_CABA,3,1) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,poblacion,world_width,periodo_pre_hospitalizacion,Proporcion_fallecimiento_hospitalizados)
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
+
+#
+# Guarda parametros
+#
+params <- bind_rows(params, fit %>% distinct(beta,Horas_en_viaje,poblacion,world_width,periodo_pre_hospitalizacion,Proporcion_fallecimiento_hospitalizados) %>% mutate(periodo_fit="33-63", fec_min=fec_min,fec_max=fec_lim))
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30), aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)  +  geom_vline(xintercept = fec_lim,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+ggplot(fit , aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = fec_lim,color="black",linetype = 3)  +  geom_vline(xintercept = c(fec_lim,fec_min) ,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ylab("Fallecidos CABA") + xlab("") + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+
+ggplot(fit, aes(fecha,hospitalizados_pred)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab("Hospitalizados CABA") + xlab("") + ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+
+ggplot(fit %>% filter(fecha<=max(df$fecha)+30), aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+  geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) 
+
+ggplot(fit , aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=df,aes(fecha,casos),color='red',size=.5) + scale_y_log10() + geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab("Casos CABA") + xlab("") +  ggtitle("Modelo de Individuos - Grupo covid19UNGS")
+
+ggplot(params, aes(beta,Horas_en_viaje,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
+  xlab("Tasa de infección (beta)") + ylab("Horas de viaje")
+
+saveRDS(params,"Simulations/fitted_params.rds")
+```
+
+
+## Mas Simulaciones para ajuste usando Latin Hypercubic Sampling 
+
+* Sin limitacion de camas 70000
+
+* _Variables_: beta, Horas_en_viaje, poblacion, world_width
+
+```{r gen_fit_lhs500, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+
+nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3_500",
+                            outpath=outpath,
+                            repetition=1,
+                            tickmetrics="true",
+                            idsetup="setup",
+                            idgo="go",
+                            runtime=365,
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
+                            variables = list("Horas-en-viaje" = list(min=0, max=3, qfun="qunif"),
+                                             "beta" = list(min=0.30, max=0.50, qfun="qunif"),
+                                             "Proporcion-fallecimiento-hospitalizados"= list(min=0.05, max=0.20,qfun="qunif"),
+                                             "periodo-pre-hospitalizacion"= list(min=2.0,max=5.0,qfun="qunif")),
+                            constants = list("world-width" = 201,
+                                             "world-height" = 201,
+                                             "infectados-iniciales" = 10,
+                                             "max-personas-por-casa" = 10,
+                                             "max-personas-por-trabajo" = 100,
+                                             "Horas-en-trabajo"=8,
+                                             "periodo-latencia"=3.6,
+                                             "Proporcion-asintomaticos"=0.43,
+                                             "periodo-presintomatico"=1.5,
+                                             "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion-fallecido" = 13.2,
+                                             "periodo-hospitalizacion-recuperado" = 15,
+                                             "Proporcion-fallecimiento-saturada"= 0.5,
+                                             "capacidad-de-camas"= 70000
+                                             ))
+
+#
+# Set a latin hypercubic design 
+#
+nl@simdesign <- simdesign_lhs(nl=nl,
+                               samples=300,
+                               nseeds=4,
+                               precision=2)
+
+# run in Paralell 
+#
+require(future)
+plan(multisession)
+require(tictoc)
+tic()
+results <- run_nl_all(nl,split = 20)
+toc()
+plan(sequential)
+names(results)
+
+#
+# Write the output
+#
+setsim(nl, "simoutput") <- results 
+write_simoutput(nl)
 ```

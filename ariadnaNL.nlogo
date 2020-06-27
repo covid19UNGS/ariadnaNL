@@ -1,6 +1,7 @@
 breed [personas persona]        ; living personas
 
-personas-own [ estado           ;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
+personas-own [ estado           ; 1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
+                                ; 9 infectado-leve
                donde            ; 1 =casa  2=trabajo 3= hospital
 
                mi-casa
@@ -15,7 +16,7 @@ patches-own [ lugar             ;; 1= casa 2=trabajo 3=Hospital
 globals [ total-patches
           cant-trabajos
           cant-casas
-          hospital                ; patch hospital
+          hospital             ; patch hospital
           horas-en-casa        ; horas en el trabajo
           horas-de-dormir
           gamma                ; periodo-latencia
@@ -151,7 +152,8 @@ to go
 end
 
 to ir-al-trabajo
-    if estado < 5 [                ; 1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
+    if estado < 5 or estado = 8
+    [  ; 1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado, 9 infectado leve
     ;;
     ;; La primera vez asigna el lugar de trabajo
     ;;
@@ -167,10 +169,10 @@ to ir-al-trabajo
         move-to mi-trabajo
         lt 10
         fd 0.2
-      set donde 2
+        set donde 2
         ]
         donde = 2 [
-          show "Nadie se queda a dormir en el trabajo!!!"
+          show (word "Nadie se queda a dormir en el trabajo! Estado " estado)
         ]
        )
     ]
@@ -178,32 +180,17 @@ to ir-al-trabajo
 end
 
 to volver-a-casa
-   (ifelse estado < 5 or estado = 8
-    [                               ;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
-      (ifelse donde = 2 [
+   (ifelse estado < 6 or estado = 8
+    [  ;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado, 9 infectado leve
+      if donde != 1 [
         move-to mi-casa
         rt 10
         fd 0.2
         set donde 1
+        set nro-personas nro-personas + 1
       ]
-      donde = 3 [
-        move-to mi-casa
-        rt 10
-        fd 0.2
-        set donde 1
-      ]
-      donde = 1 [
-            ;;show "Alguien se quedó en casa"
-          ]
-      )
-  ]
-  estado = 5 [
-    move-to mi-casa
-    fd 0.2
-    set donde 2
-    set nro-personas nro-personas + 1
-  ]
-  estado = 6 [
+   ]
+   estado = 6 [
      if donde != 3
      [
         move-to hospital
@@ -211,13 +198,24 @@ to volver-a-casa
         set donde 3
         set nro-personas nro-personas + 1
      ]
+   ]
+   estado = 7 [
+     set nro-personas nro-personas - 1
+     set nro-fallecidos nro-fallecidos + 1
+     ;;show "Alguien se murió"
+     die
+   ]
+   estado = 9 [
+     if donde != 1
+     [
+        ;;print "Infectado leve se va a la casa"
+        move-to mi-casa
+        fd 0.2
+        set donde 1
+        set nro-personas nro-personas + 1
+     ]
   ]
-  estado = 7 [
-    set nro-personas nro-personas - 1
-    set nro-fallecidos nro-fallecidos + 1
-    ;;show "Alguien se murió"
-    die
-  ])
+  )
 
 end
 
@@ -248,7 +246,7 @@ to infeccion-local [prop-horas]
   ]
 end
 
-;;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
+;;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado, 9 infectado-leve
 ;;
 to infeccion-local-estado [prop-horas]
 
@@ -299,8 +297,20 @@ to infeccion-local-estado [prop-horas]
      estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-saturado
         if random-float 1 < lambda_h
         [
-          set estado 6
-          set nro-hospitalizados nro-hospitalizados + 1
+          ifelse random-float 1 < fallecido-sin-hospitalizacion [
+              set estado 7
+              ;;print "Fallecido sin hospitalizar"
+          ]
+          [
+            ifelse random-float 1 < proporcion-hospitalizados
+            [
+              set estado 6
+              set nro-hospitalizados nro-hospitalizados + 1
+            ][
+              set estado 9                            ;; infectado leve se vuelve a casa a hacer cuarentena NO CONTAGIA
+              ;;print "Infectado Leve"
+            ]
+          ]
         ]
      ]
      estado = 6 [
@@ -334,6 +344,14 @@ to infeccion-local-estado [prop-horas]
           ]
         ]
      ]
+     estado = 9 [                 ;; infectado-leve
+       if random-float 1 > rho_r [
+          ;;print "Infectado Leve se recupera !!!!!!!!!!!!"
+          ;;show (word "Entró en estado 8 donde " donde)
+          set estado 8
+          set nro-recuperados nro-recuperados + 1
+       ]
+     ]
     )
     set-color-persona
 
@@ -361,7 +379,7 @@ to infeccion-viaje [prop-horas]
 end
 
 to set-color-persona
-  set color scale-color red estado 0 ( 8 + 1 )
+  set color scale-color red estado 0 ( 9 + 1 )
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -432,7 +450,7 @@ beta
 beta
 0
 1
-0.34
+0.29
 .01
 1
 NIL
@@ -571,11 +589,12 @@ true
 "" ""
 PENS
 "Latentes" 1.0 0 -8053223 true "" "plot count personas with [estado = 2]"
-"Presintomatico" 1.0 0 -5298144 true "" "plot count personas with [estado = 3]"
-"Asintomatico" 1.0 0 -2674135 true "" "plot count personas with [estado = 4]"
-"Sintomatico" 1.0 0 -1604481 true "" "plot count personas with [estado = 5]"
-"Hospitalizado" 1.0 0 -534828 true "" "plot nro-hospitalizados"
+"Presintomatico" 1.0 0 -6995700 true "" "plot count personas with [estado = 3]"
+"Asintomatico" 1.0 0 -10402772 true "" "plot count personas with [estado = 4]"
+"Sintomatico" 1.0 0 -4079321 true "" "plot count personas with [estado = 5]"
+"Hospitalizado" 1.0 0 -10899396 true "" "plot nro-hospitalizados"
 "Fallecido" 1.0 0 -16449023 true "" "plot nro-fallecidos"
+"Leve" 1.0 0 -8990512 true "" "plot count personas with [estado = 9]"
 
 SLIDER
 10
@@ -601,7 +620,7 @@ periodo-presintomatico
 periodo-presintomatico
 1
 5
-1.5
+1.2
 .1
 1
 NIL
@@ -727,10 +746,10 @@ count personas with [estado = 4]
 11
 
 MONITOR
-1010
-345
-1120
-390
+875
+495
+990
+540
 Sintomaticos
 count personas with [estado = 5]
 2
@@ -811,6 +830,47 @@ MONITOR
 440
 NIL
 nro-hospitalizados
+2
+1
+11
+
+SLIDER
+370
+455
+612
+488
+proporcion-hospitalizados
+proporcion-hospitalizados
+0
+1
+0.3
+.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+725
+545
+977
+578
+fallecido-sin-hospitalizacion
+fallecido-sin-hospitalizacion
+0
+1
+0.2
+0.01
+1
+NIL
+HORIZONTAL
+
+MONITOR
+1010
+345
+1112
+390
+Infectado leve
+count personas with [estado = 9]
 2
 1
 11

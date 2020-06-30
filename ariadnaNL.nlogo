@@ -588,13 +588,13 @@ true
 true
 "" ""
 PENS
-"Latentes" 1.0 0 -8053223 true "" "plot count personas with [estado = 2]"
-"Presintomatico" 1.0 0 -6995700 true "" "plot count personas with [estado = 3]"
-"Asintomatico" 1.0 0 -10402772 true "" "plot count personas with [estado = 4]"
-"Sintomatico" 1.0 0 -4079321 true "" "plot count personas with [estado = 5]"
+"Latentes" 1.0 0 -8990512 true "" "plot count personas with [estado = 2]"
+"Presintomatico" 1.0 0 -955883 true "" "plot count personas with [estado = 3]"
+"Asintomatico" 1.0 0 -1184463 true "" "plot count personas with [estado = 4]"
+"Sintomatico" 1.0 0 -2674135 true "" "plot count personas with [estado = 5]"
 "Hospitalizado" 1.0 0 -10899396 true "" "plot nro-hospitalizados"
 "Fallecido" 1.0 0 -16449023 true "" "plot nro-fallecidos"
-"Leve" 1.0 0 -8990512 true "" "plot count personas with [estado = 9]"
+"Leve" 1.0 0 -5509967 true "" "plot count personas with [estado = 9]"
 
 SLIDER
 10

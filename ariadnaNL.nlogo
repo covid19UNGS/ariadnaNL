@@ -225,10 +225,10 @@ end
 to infeccion-local [prop-horas]
 
   ask patches [
-    let nro-infectores count personas-here with [estado > 2 and estado < 6]
     set nro-personas count personas-here
     if nro-personas > 0
     [
+      let nro-infectores count personas-here with [estado > 2 and estado < 6]
       set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
       ;;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
@@ -251,10 +251,10 @@ end
 to infeccion-local-estado [prop-horas]
 
   ask patches [
-    let nro-infectores count personas-here with [estado > 2 and estado < 6]
     set nro-personas count personas-here
     if nro-personas > 0
     [
+      let nro-infectores count personas-here with [estado > 2 and estado < 6]
       set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
       ;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
@@ -284,6 +284,7 @@ to infeccion-local-estado [prop-horas]
      estado = 3 [
         if random-float 1 < lambda_p
         [
+          ;;show "Entra en estado 5 Sintomatico"
           set estado 5
         ]
      ]
@@ -304,11 +305,12 @@ to infeccion-local-estado [prop-horas]
           [
             ifelse random-float 1 < proporcion-hospitalizados
             [
+              ;;show "Entra en estado 6 Hospitalizado"
               set estado 6
               set nro-hospitalizados nro-hospitalizados + 1
             ][
               set estado 9                            ;; infectado leve se vuelve a casa a hacer cuarentena NO CONTAGIA
-              ;;print "Infectado Leve"
+              ;;show "Entra en estado 9 Leve"
             ]
           ]
         ]
@@ -317,12 +319,12 @@ to infeccion-local-estado [prop-horas]
         if-else nro-hospitalizados > capacidad-de-camas [
           ;print "Estamos saturados!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           if-else random-float 1 < proporcion-fallecimiento-saturada [
-            if random-float 1 > rho_d [
+            if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
             ]
           ][
-            if random-float 1 > rho_r [
+            if random-float 1 < rho_r [
               set estado 8
               set nro-recuperados nro-recuperados + 1
               set nro-hospitalizados nro-hospitalizados - 1
@@ -331,22 +333,23 @@ to infeccion-local-estado [prop-horas]
 
         ][
           if-else random-float 1 < proporcion-fallecimiento-hospitalizados [
-            if random-float 1 > rho_d [
+            if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
+              ;;show "Sale de estado 6 a Fallecido"
             ]
           ][
-            if random-float 1 > rho_r [
+            if random-float 1 < rho_r [
               set estado 8
               set nro-recuperados nro-recuperados + 1
               set nro-hospitalizados nro-hospitalizados - 1
+              ;;show "Sale de estado 6 a Recuperado"
             ]
           ]
         ]
      ]
      estado = 9 [                 ;; infectado-leve
-       if random-float 1 > rho_r [
-          ;;print "Infectado Leve se recupera !!!!!!!!!!!!"
+       if random-float 1 < rho_r [
           ;;show (word "Entró en estado 8 donde " donde)
           set estado 8
           set nro-recuperados nro-recuperados + 1
@@ -385,11 +388,11 @@ end
 GRAPHICS-WINDOW
 355
 10
-783
-439
+765
+421
 -1
 -1
-20.0
+2.0
 1
 10
 1
@@ -399,10 +402,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--10
-10
--10
-10
+-100
+100
+-100
+100
 0
 0
 1
@@ -450,7 +453,7 @@ beta
 beta
 0
 1
-0.29
+0.35
 .01
 1
 NIL
@@ -527,8 +530,8 @@ Horas-en-trabajo
 Horas-en-trabajo
 1
 10
-8.0
-1
+7.6
+.1
 1
 NIL
 HORIZONTAL
@@ -605,7 +608,7 @@ Proporcion-asintomaticos
 Proporcion-asintomaticos
 0
 1
-0.43
+0.45
 .01
 1
 NIL
@@ -620,7 +623,7 @@ periodo-presintomatico
 periodo-presintomatico
 1
 5
-1.2
+1.5
 .1
 1
 NIL
@@ -643,9 +646,9 @@ HORIZONTAL
 
 SLIDER
 10
-455
+450
 297
-488
+483
 periodo-hospitalizacion-fallecido
 periodo-hospitalizacion-fallecido
 1
@@ -658,14 +661,14 @@ HORIZONTAL
 
 SLIDER
 10
-535
+530
 347
-568
+563
 Proporcion-fallecimiento-hospitalizados
 Proporcion-fallecimiento-hospitalizados
 0
 1
-0.09
+0.08
 .01
 1
 NIL
@@ -673,14 +676,14 @@ HORIZONTAL
 
 SLIDER
 10
-495
+490
 317
-528
+523
 periodo-hospitalizacion-recuperado
 periodo-hospitalizacion-recuperado
 1
 15
-14.9
+15.0
 .1
 1
 NIL
@@ -706,8 +709,8 @@ Horas-en-viaje
 Horas-en-viaje
 0
 4
-1.0
-1
+1.6
+.1
 1
 NIL
 HORIZONTAL
@@ -787,32 +790,32 @@ periodo-pre-hospitalizacion
 periodo-pre-hospitalizacion
 1
 15
-3.0
+2.5
 .1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-370
-495
-572
-528
+365
+490
+567
+523
 capacidad-de-camas
 capacidad-de-camas
 0
-1000
-225.0
+3000
+3000.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-370
-535
-667
-568
+365
+530
+662
+563
 proporcion-fallecimiento-saturada
 proporcion-fallecimiento-saturada
 0
@@ -835,30 +838,30 @@ nro-hospitalizados
 11
 
 SLIDER
-370
-455
-612
-488
+365
+450
+607
+483
 proporcion-hospitalizados
 proporcion-hospitalizados
 0
 1
-0.3
+0.85
 .01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-725
-545
-977
-578
+575
+490
+827
+523
 fallecido-sin-hospitalizacion
 fallecido-sin-hospitalizacion
 0
 1
-0.2
+0.05
 0.01
 1
 NIL
@@ -1217,7 +1220,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

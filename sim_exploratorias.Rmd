@@ -580,7 +580,7 @@ write_simoutput(nl)
 
 list.files("Simulations")
 
-res <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo4_8_500_lhs.csv",skip = 0) %>% 
+res <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo4_8_phosp25_45_500_lhs.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
                                                 casos = nro_fallecidos+ nro_recuperados,
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
@@ -616,7 +616,7 @@ which.min(df_sumsqr$ssq)
 #
 fit <- fit_ariadnaNL_simulations(df,0,80,res,pob_CABA,0,1) 
 
-fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,Proporcion_fallecimiento_hospitalizados,ssq)
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
 
 #
 # fecha límite del ajuste
@@ -625,16 +625,19 @@ fec_lim <- fit$fec_lim
 fec_min <- fit$fec_min
 fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
 
-fit %>% filter(fecha == '2020-06-28', nro_hospitalizados> 3000) 
+fit %>% filter(fecha == '2020-06-28') %>% select(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados, nro_hospitalizados,hospitalizados_pred) %>% arrange( desc(hospitalizados_pred))
 #
 # Guarda parametros
 #
-params <- fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,ssq) %>% mutate(periodo_fit="0-33", fec_min=fec_min,fec_max=fec_lim)
+params <- fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,ssq) %>% mutate(periodo_fit="0-33", fec_min=fec_min,fec_max=fec_lim)
 
 nombre_fases <- c("Cuarentena","Fase 2","Fase 3","Fase 4","ASPO/DISPO")
 fases <- tibble(fecha=c(ymd("2020-03-20"),ymd("2020-04-13"),ymd("2020-04-25"),ymd("2020-05-10"),ymd("2020-06-08")),
                   nombre=nombre_fases)
 
+#
+# Para los casos habria que tomar de la misma manera que los calculamos en el modelo como fallecidos+recuperados!!!!!!!!!!!!!
+#
 plot_ajustes(fit,dff)
 
 ```
@@ -656,7 +659,7 @@ Ajustando por los primeros 30 Dias de epidemia el nro. de fallecidos queda dentr
 #
 fit <- fit_ariadnaNL_simulations(df,33,50,res,pob_CABA,0,1) 
 
-fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,Proporcion_fallecimiento_hospitalizados,ssq)
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
 
 #
 # fecha límite del ajuste
@@ -665,11 +668,13 @@ fec_lim <- fit$fec_lim
 fec_min <- fit$fec_min
 fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
 
+fit %>% filter(fecha == '2020-06-28') %>% select(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados, nro_hospitalizados,hospitalizados_pred) %>% arrange( desc(hospitalizados_pred))
+
 #
 # Guarda parametros
 #
 params <- bind_rows(params, fit %>%
-                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,ssq) %>% 
+                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,ssq) %>% 
                       mutate(periodo_fit="33-63", fec_min=fec_min,fec_max=fec_lim))
 
 plot_ajustes(fit,dff)
@@ -677,7 +682,7 @@ plot_ajustes(fit,dff)
 
 Aumenta la tasa de infeccion beta, disminuye el tiempo de viaje, y aumenta el fallecimiento de los hospitalizados, pero la tasa de hospitalizacion sigue siendo muy baja y el nro de hospiralizados tambien (no está entre los parametros de ajuste) 
 
-Al 27/6 las camas ocupadas en caba en el sistema público: 220,717,3005 = 3942
+Al 27/6 las camas ocupadas en caba en el sistema público: 220,717,3005 = 3942, Ver archivo en Data
 
 ## Ajuste usando el rango de 63-93 días
 
@@ -685,7 +690,7 @@ Al 27/6 las camas ocupadas en caba en el sistema público: 220,717,3005 = 3942
 
 ```{r fit_lhs63-93, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
-# Ver rango de hospitalizados 2020-06-27 = 3812
+# Ver rango de hospitalizados 2020-06-27 = 3942
 #
 res %>% mutate( fecha = min(df$fecha) + step, hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA) %>% filter(fecha == "2020-06-27") %>% select(nro_hospitalizados) %>% arrange(desc(nro_hospitalizados))
 
@@ -696,7 +701,7 @@ res %>% mutate( fecha = min(df$fecha) + step, hospitalizados_pred=nro_hospitaliz
 #
 fit <- fit_ariadnaNL_simulations(df,63,20,res,pob_CABA,0,1) 
 
-fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,Proporcion_fallecimiento_hospitalizados)
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
 
 #
 # fecha límite del ajuste
@@ -705,25 +710,17 @@ fec_lim <- fit$fec_lim
 fec_min <- fit$fec_min
 fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA) 
 
+fit %>% filter(fecha == '2020-06-28') %>% select(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados, nro_hospitalizados,hospitalizados_pred) %>% arrange( desc(hospitalizados_pred))
+
 #
 # Guarda parametros
 #
 params <- bind_rows(params, fit %>% 
-                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,ssq) %>% 
+                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,ssq) %>% 
                       mutate(periodo_fit="63-93", fec_min=fec_min,fec_max=fec_lim))
 
 plot_ajustes(fit,dff)
 
-ggplot(params, aes(beta,Horas_en_viaje,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
-  xlab("Tasa de infección (beta)") + ylab("Horas de viaje")
-
-ggplot(params, aes(beta,Horas_en_trabajo,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
-  xlab("Tasa de infección (beta)") + ylab("Horas de trabajo")
-
-ggplot(params, aes(beta,Proporcion_fallecimiento_hospitalizados,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
-  xlab("Tasa de infección (beta)") + ylab("Fallecimiento Hospitalizados")
-
-saveRDS(params,"Simulations/fitted_params.rds")
 
 
 
@@ -735,18 +732,12 @@ saveRDS(params,"Simulations/fitted_params.rds")
 
 ```{r fit_lhs30-10, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
-# Ver rango de hospitalizados 2020-06-27 = 3812
-#
-res %>% mutate( fecha = min(df$fecha) + step, hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA) %>% filter(fecha == "2020-06-27") %>% select(nro_hospitalizados) %>% arrange(desc(nro_hospitalizados))
-
-
-
 #
 # Ajustando del 63-93 dias
 #
-fit <- fit_ariadnaNL_simulations(dff,30,10,res,pob_CABA,0,2) 
+fit <- fit_ariadnaNL_simulations(dff,30,10,res,pob_CABA,0,1) 
 
-fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,Proporcion_fallecimiento_hospitalizados)
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
 
 #
 # fecha límite del ajuste
@@ -755,15 +746,28 @@ fec_lim <- fit$fec_lim
 fec_min <- fit$fec_min
 fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA) 
 
+fit %>% filter(fecha == '2020-06-28') %>% select(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados, nro_hospitalizados,hospitalizados_pred) %>% arrange( desc(hospitalizados_pred))
+
 #
 # Guarda parametros
 #
 params <- bind_rows(params, fit %>% 
-                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,ssq) %>% 
-                      mutate(periodo_fit="63-93", fec_min=fec_min,fec_max=fec_lim))
+                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,ssq) %>% 
+                      mutate(periodo_fit="30-Final", fec_min=fec_min,fec_max=fec_lim))
 
 
 plot_ajustes(fit,dff)
+
+ggplot(params, aes(beta,Horas_en_viaje,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
+  xlab("Tasa de infección (beta)") + ylab("Horas de viaje")
+
+ggplot(params, aes(beta,Horas_en_trabajo,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
+  xlab("Tasa de infección (beta)") + ylab("Horas de trabajo")
+
+ggplot(params, aes(beta,proporcion_hospitalizados,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
+  xlab("Tasa de infección (beta)") + ylab("Proporcion Hospitalizados")
+
+saveRDS(params,"Simulations/fitted_params.rds")
 
 
 ```

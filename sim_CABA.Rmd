@@ -1,0 +1,585 @@
+---
+title: "Simulaciones Exploratorias Modelo NetLogo bipartito COVID-19"
+author: Grupo covid19UNGS
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+  
+```{r setup, include=FALSE,echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+needed_packages <- c(
+    "tidyverse"
+  , "lubridate"
+  , "nlrx")
+
+lapply(needed_packages, function(x) { if(!require(x,character.only = TRUE)) install.packages(x)} )
+
+theme_set(theme_bw())
+source("R/functions.R")
+
+# Unix default NetLogo installation path (adjust to your needs!):
+netlogopath <- file.path("/home/leonardo/NetLogo")
+simfolder <- "/home/leonardo/Dropbox/Projects/ariadnaNL"
+modelpath <- file.path(simfolder, "ariadnaNL.nlogo")
+outpath <- file.path(simfolder,"Simulations")
+
+# If not defined set the JAVA version of your local 
+if(Sys.getenv("JAVA_HOME")==""){
+  Sys.setenv(JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64")
+  ## "/usr/lib/jvm/java-8-oracle"
+}
+
+nl <- nl(nlversion = "6.1.1",
+         nlpath = netlogopath,
+         modelpath = modelpath,
+         jvmmem = 2048)
+
+```
+
+
+## Leer los datos para CABA 
+
+
+```{r read_data_fit, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+# leer archivo para comparar
+
+cor<-read_csv('https://docs.google.com/spreadsheets/d/16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA/export?format=csv&id=16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA&gid=0')
+
+# unique(cor$osm_admin_level_4)
+
+pob_CABA <- 2890000
+dff <- cor %>% filter( osm_admin_level_4 =="CABA") %>% mutate(fecha=dmy(fecha), dias =as.numeric( fecha - min(fecha)),prop_casos=cumsum(nue_casosconf_diff)/pob_CABA,casos=cumsum(nue_casosconf_diff),fallecidos=cumsum(nue_fallecidos_diff), prop_fallecidos=fallecidos/pob_CABA) %>% select(fecha,dias,casos,prop_casos,fallecidos,prop_fallecidos,nue_fallecidos_diff)
+
+
+# Para que no se corran las fechas de ajuste que son relativas al ultimo dia de los datos
+#
+df <- dff %>% filter(fecha <=  "2020-06-23")
+
+```
+
+
+## Simulaciones para ajuste usando Latin Hypercubic Sampling 
+
+* Sin limitacion de camas 70000
+
+* _Variables_: beta, Horas_en_viaje, poblacion, Proporcion-fallecimiento-hospitalizados, periodo-pre-hospitalizacion
+
+```{r gen_fit_lhs, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3_trabajo4_8",
+                            outpath=outpath,
+                            repetition=1,
+                            tickmetrics="true",
+                            idsetup="setup",
+                            idgo="go",
+                            runtime=365,
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
+                            variables = list("Horas-en-viaje" = list(min=0, max=3, qfun="qunif"),
+                                             "beta" = list(min=0.30, max=0.50, qfun="qunif"),
+                                             "proporcion-hospitalizados"= list(min=0.20, max=0.45,qfun="qunif"),
+                                             "Horas-en-trabajo"=list(min=4, max=8, qfun="qunif")
+                                             ),                            
+                            constants = list("world-width" = 201,
+                                             "world-height" = 201,
+                                             "infectados-iniciales" = 10,
+                                             "max-personas-por-casa" = 10,
+                                             "max-personas-por-trabajo" = 100,
+                                             "periodo-latencia"=3.6,
+                                             "Proporcion-asintomaticos"=0.43,
+                                             "periodo-presintomatico"=1.5,
+                                             "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion-fallecido" = 13.2,
+                                             "periodo-hospitalizacion-recuperado" = 15,
+                                             "Proporcion-fallecimiento-saturada"= 0.5,
+                                             "Fallecido-sin-hospitalizacion"=0.18,
+                                             "Proporcion-fallecimiento-hospitalizados"=0.09,
+                                             "periodo-pre-hospitalizacion"= 2.5,
+                                             "capacidad-de-camas"= 10000
+                                             ))
+
+#
+# Set a latin hypercubic design 
+#
+nl@simdesign <- simdesign_lhs(nl=nl,
+                               samples=300,
+                               nseeds=4,
+                               precision=2)
+
+# run in Paralell 
+#
+require(future)
+plan(multisession)
+require(tictoc)
+tic()
+results <- run_nl_all(nl,split = 10)
+toc()
+plan(sequential)
+names(results)
+
+#
+# Write the output
+#
+setsim(nl, "simoutput") <- results 
+write_simoutput(nl)
+```
+
+## Mas Simulaciones para ajuste usando Latin Hypercubic Sampling 
+
+* Sin limitacion de camas 70000
+
+* _Variables_: beta, Horas_en_viaje, poblacion, Proporcion-fallecimiento-hospitalizados, periodo-pre-hospitalizacion
+
+```{r gen_fit_lhs_phosp_500, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+
+nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3_trabajo2_8_500",
+                            outpath=outpath,
+                            repetition=1,
+                            tickmetrics="true",
+                            idsetup="setup",
+                            idgo="go",
+                            runtime=365,
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
+                            variables = list("Horas-en-viaje" = list(min=0, max=3, qfun="qunif"),
+                                             "beta" = list(min=0.30, max=0.50, qfun="qunif"),
+                                             "Horas-en-trabajo"=list(min=2, max=8, qfun="qunif")
+                                             ),                            
+                            constants = list("world-width" = 201,
+                                             "world-height" = 201,
+                                             "infectados-iniciales" = 10,
+                                             "max-personas-por-casa" = 10,
+                                             "max-personas-por-trabajo" = 100,
+                                             "periodo-latencia"=3.6,
+                                             "Proporcion-asintomaticos"=0.43,
+                                             "periodo-presintomatico"=1.5,
+                                             "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion-fallecido" = 13.2,
+                                             "periodo-hospitalizacion-recuperado" = 15,
+                                             "Proporcion-fallecimiento-saturada"= 0.1,
+                                             "proporcion-hospitalizados"= 0.16,
+                                             "Proporcion-fallecimiento-hospitalizados"=0.006,
+                                             "Fallecido-sin-hospitalizacion"=0.005,
+                                             "periodo-pre-hospitalizacion"= 2.5,
+                                             "capacidad-de-camas"= 10000
+                                             ))
+
+                            
+
+#
+# Set a latin hypercubic design 
+#
+nl@simdesign <- simdesign_lhs(nl=nl,
+                               samples=500,
+                               nseeds=4,
+                               precision=2)
+
+# run in Paralell 
+#
+require(future)
+plan(multisession)
+require(tictoc)
+tic()
+results <- run_nl_all(nl,split = 20)
+toc()
+plan(sequential)
+names(results)
+
+#
+# Write the output
+#
+setsim(nl, "simoutput") <- results 
+write_simoutput(nl)
+
+```
+
+## Ajuste usando los primeros 33 días
+
+* 800x4 simulaciones en total
+
+* Faltaria calcular nro de hospitalizados, para eliminar ajustes usando metodología de criterios multiples
+@Hartig2011
+
+```{r fit_lhs, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+list.files("Simulations")
+
+res <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo2_8_500_lhs.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados,
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion)
+
+res1 <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo4_8_fasihosp1_2_501_lhs.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados,
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,
+                                                siminputrow = max(res$siminputrow) +  siminputrow)
+
+res <- bind_rows(res,res1)
+rm(res1)
+
+#
+# Ajuste por suma de cuadrados, aqui tambien variamos la fecha de inicio de la epidemia
+#
+
+# Para que no se corran las fechas de ajuste que son relativas al ultimo dia de los datos
+#
+df <- dff %>% filter(fecha <=  "2020-06-23")
+
+#
+# Tomo despues de los primeros 20 dias hasta el ultimo dia para determinar el inicio de la epidemia
+#
+# vec_sumsqr <- lapply( seq_len(20),function(x){ fit_ariadnaNL_simulations(df,30,0,res,pob_CABA,x)$fit %>% distinct(ssq)})
+# df_sumsqr <- do.call("rbind", vec_sumsqr)
+# which.min(df_sumsqr$ssq)
+
+#
+# Ajustando los primeros 33 dias
+#
+fit <- fit_ariadnaNL_simulations(df,0,80,res,pob_CABA,0,100) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,Fallecido_sin_hospitalizacion,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit #%>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
+
+#
+# Selecciona el rango de hospitalizados de una fecha 
+#
+sel_fit <- fit  %>% filter(fecha == '2020-06-28', hospitalizados_pred > (4101 *.8)  & hospitalizados_pred < (4101 *1.2)) %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq,siminputrow)
+nrow(sel_fit)
+#
+# Ahora supongo que se trabajaba casi normalmente tomo el maximo de nro de horas 
+#
+fit <- fit  %>% filter( siminputrow %in% sel_fit$siminputrow)
+
+fit <- fit  %>% filter( Horas_en_trabajo %in% max(sel_fit$Horas_en_trabajo))
+
+
+#fit <- fit %>% filter(Horas_en_trabajo>6) 
+fit  %>% filter(fecha == '2020-06-28') %>% select( hospitalizados_pred,beta,siminputrow) %>% arrange(desc(hospitalizados_pred))
+fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,Fallecido_sin_hospitalizacion,ssq)
+
+# Guarda parametros
+#
+params <- fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,Fallecido_sin_hospitalizacion,ssq) %>% mutate(periodo_fit="0-33", fec_min=fec_min,fec_max=fec_lim, lugar="CABA")
+
+nombre_fases <- c("Cuarentena","Fase 2","Fase 3","Fase 4","ASPO/DISPO","Nuevo ASPO")
+fases <- tibble(fecha=c(ymd("2020-03-20"),ymd("2020-04-13"),ymd("2020-04-25"),ymd("2020-05-10"),ymd("2020-06-08"),ymd("2020-07-01")),nombre=nombre_fases)
+
+
+#
+# Para los casos habria que tomar de la misma manera que los calculamos en el modelo como fallecidos+recuperados!!!!!!!!!!!!!
+#
+plot_ajustes(fit,dff,"CABA")
+
+```
+
+
+Ajustando por los primeros 30 Dias de epidemia y seleccionando los que tienen mas de 7 Horas en el trabajo el nro. de fallecidos es un poco mas alto, el nro. de casos es un poco mas alto, y el nro de hospitalizados es un poco más bajo. La proporcion de fallecimiento de hospitalizados sería muy alta o la proporcion de hospitalizados baja, o la proporcion de Fallecidos sin hospitalizar muy alta.
+
+
+
+
+## Ajuste usando el rango de 33-63 días
+
+
+```{r fit_lhs33-66, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+#
+# Ajustando del 33-63 dias
+#
+fit <- fit_ariadnaNL_simulations(df,33,50,res,pob_CABA,0,100) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,Fallecido_sin_hospitalizacion,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit # %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
+
+#
+# Filtro por la cantidad de hospitalizados en una fecha en CABA
+#
+sel_fit <- fit  %>% filter(fecha == '2020-06-28', hospitalizados_pred > (4101 *.8)  & hospitalizados_pred < (4101 *1.2)) %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq,siminputrow)
+nrow(sel_fit)
+sel_fit <- sel_fit %>% select(beta,siminputrow) %>% arrange(beta)
+#
+# Ahora supongo que se trabajaba casi normalmente tomo el maximo de nro de horas 
+#
+fit <- fit  %>% filter( siminputrow %in% sel_fit$siminputrow[1])
+
+#fit <- fit  %>% filter( Horas_en_trabajo < 5)
+
+# sel_fit <- fit  %>% filter(fecha == '2020-06-28') %>% select( hospitalizados_pred,beta,siminputrow) %>% arrange(desc(hospitalizados_pred))
+# sel_fit
+# Selecciono el que tiene nro mas alto de hospitalizaciones
+#
+# fit <- fit  %>% filter( siminputrow == sel_fit$siminputrow[1])
+
+#fit <- fit  %>% filter( beta %in% sel_fit$beta)
+#fit <- fit %>% filter(Horas_en_trabajo<5, beta>0.37) 
+fit  %>% filter(fecha == '2020-06-28') %>% select( hospitalizados_pred)
+
+fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,Fallecido_sin_hospitalizacion,ssq)
+
+#
+# Guarda parametros
+#
+params <- bind_rows(params, fit %>%
+                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,Fallecido_sin_hospitalizacion,ssq) %>% 
+                      mutate(periodo_fit="33-63", fec_min=fec_min,fec_max=fec_lim))
+
+plot_ajustes(fit,dff,"CABA")
+```
+
+Ajusta con el rango de nro de hospitalizados observado, selecciono el beta mas parecido al anterior
+
+
+Al 27/6 las camas ocupadas en caba en el sistema público: 220,717,3005 = 3942, Ver archivo en Data
+
+## Ajuste usando el rango de 63-93 días
+
+```{r fit_lhs63-93, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+#
+# Ajustando del 63-93 dias
+#
+fit <- fit_ariadnaNL_simulations(df,63,20,res,pob_CABA,0,100) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,Fallecido_sin_hospitalizacion,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit #%>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA) 
+
+fit  %>% filter(fecha == '2020-06-28') %>% select( hospitalizados_pred,beta)
+sel_fit <- fit  %>% filter(fecha == '2020-06-28', hospitalizados_pred > (4101 *.8)  & hospitalizados_pred < (4101 *1.2)) %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq,siminputrow)
+nrow(sel_fit)
+
+sel_fit <- sel_fit %>% select(beta,siminputrow) %>% arrange(beta)
+sel_fit
+
+# sel_fit <- fit  %>% filter(fecha == '2020-06-28') %>% select( hospitalizados_pred,beta,siminputrow) %>% arrange(desc(hospitalizados_pred))
+
+# Selecciono el que tiene beta mas parecido 
+#
+fit <- fit  %>% filter( siminputrow == sel_fit$siminputrow[2])
+#fit <- fit %>% filter(Horas_en_trabajo<5, beta>0.37) 
+fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,Fallecido_sin_hospitalizacion,ssq)
+
+#
+# Guarda parametros
+#
+params <- bind_rows(params, fit %>% 
+                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,Fallecido_sin_hospitalizacion,ssq) %>% 
+                      mutate(periodo_fit="63-93", fec_min=fec_min,fec_max=fec_lim))
+
+plot_ajustes(fit,dff, "CABA")
+
+
+
+
+```
+
+Ajusta selecciono el beta mas parecido aumentaron las horas en trabajo  
+
+## Ajuste despues de los primeros 93-121 días 06/06 hasta 1/07 
+
+```{r fit_lhs30-10, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+df <- dff %>% filter(fecha <=  "2020-07-01")
+
+#
+# Ajustando del 63-93 dias
+#
+fit <- fit_ariadnaNL_simulations(df,93,0,res,pob_CABA,0,100) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq)
+
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit #%>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA) 
+
+#
+# Filtro por la cantidad de hospitalizados en una fecha en CABA
+#
+
+fit  %>% filter(fecha == '2020-06-28') %>% select( hospitalizados_pred,beta)
+sel_fit <- fit  %>% filter(fecha == '2020-06-28', hospitalizados_pred > (4101 *.8)  & hospitalizados_pred < (4101 *1.2)) %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq,siminputrow)
+nrow(sel_fit)
+
+sel_fit <- sel_fit %>% select(beta,Horas_en_trabajo,siminputrow) %>% arrange(beta)
+sel_fit <- sel_fit %>% filter(beta  == 0.4) %>% filter( Horas_en_trabajo==min(Horas_en_trabajo))
+
+# Selecciono el que tiene nro mas alto de hospitalizaciones
+#
+fit <- fit  %>% filter( siminputrow == sel_fit$siminputrow)
+
+#fit <- fit %>% filter(Horas_en_trabajo<5, beta>0.37) 
+fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,Fallecido_sin_hospitalizacion,ssq)
+
+
+#
+# Guarda parametros
+#
+params <- bind_rows(params, fit %>% 
+                      distinct(beta,Horas_en_viaje,Horas_en_trabajo,poblacion,world_width,Proporcion_fallecimiento_hospitalizados,proporcion_hospitalizados,Fallecido_sin_hospitalizacion,ssq) %>% mutate(periodo_fit="93-121", fec_min=fec_min,fec_max=fec_lim,lugar="CABA"))
+
+
+plot_ajustes(fit,dff, "CABA")
+
+ggplot(params, aes(beta,Horas_en_viaje,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
+  xlab("Tasa de infección (beta)") + ylab("Horas de viaje")
+
+ggplot(params, aes(beta,Horas_en_trabajo,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
+  xlab("Tasa de infección (beta)") + ylab("Horas de trabajo")
+
+ggplot(params, aes(beta,Fallecido_sin_hospitalizacion,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
+  xlab("Tasa de infección (beta)") + ylab("Proporcion Hospitalizados")
+
+params <- params %>% mutate( lugar = "CABA")
+saveRDS(params,"Simulations/fitted_params.rds")
+
+
+```
+
+* Si medimos la disminucion de la epidemia por los ajustes todavia no se disminuyo nada.
+
+
+
+## Simulaciones usando parametros ajustados para calcular intervalos de confianza  
+
+* Sin limitacion de camas 70000
+
+* _Variables_: beta, Horas_en_viaje, poblacion, world_width
+
+```{r gen_fited_sim300, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+nl@experiment <- experiment(expname="world201_Beta38_viaje165_trabaj5_8_phosp42_16",
+                            outpath=outpath,
+                            repetition=1,
+                            tickmetrics="true",
+                            idsetup="setup",
+                            idgo="go",
+                            runtime=365,
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos" ),
+                            variables = list("Horas-en-viaje" = list(values=c(1.65,2,1.65)),
+                                             "beta" = list(values=c(0.38,0.38,0.38)),
+                                             "proporcion-hospitalizados"= list(values=c(0.42, 0.42,0.16)),
+                                             "Proporcion-fallecimiento-hospitalizados"=list(values=c(0.09,0.09,0.006)),
+                                             "Horas-en-trabajo"=list(values=c(5,8,5))),
+                            constants = list("world-width" = 201,
+                                             "world-height" = 201,
+                                             "infectados-iniciales" = 10,
+                                             "max-personas-por-casa" = 10,
+                                             "max-personas-por-trabajo" = 100,
+                                             "periodo-latencia"=3.6,
+                                             "Proporcion-asintomaticos"=0.43,
+                                             "periodo-presintomatico"=1.5,
+                                             "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion-fallecido" = 13.2,
+                                             "periodo-hospitalizacion-recuperado" = 15,
+                                             "Proporcion-fallecimiento-saturada"= 0.5,
+                                             "Fallecido-sin-hospitalizacion"=0.18,
+                                             "periodo-pre-hospitalizacion"= 2.5,
+                                             "capacidad-de-camas"= 70000
+                                             ))
+
+#
+# Set a distinct design 
+#
+nl@simdesign <- simdesign_distinct(nl=nl,
+                                   nseeds=100)
+
+# run in Paralell 
+#
+require(future)
+plan(multisession)
+require(tictoc)
+tic()
+results <- run_nl_all(nl,split = 3)
+toc()
+plan(sequential)
+names(results)
+
+#
+# Write the output
+#
+setsim(nl, "simoutput") <- results 
+write_simoutput(nl)
+```
+
+## Leer simulaciones de parametros ajustados calcular SD 
+
+```{r fitted_sims, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+list.files("Simulations")
+
+res <- read_netlogo_simul("Simulations/world201_Beta38_viaje165_trabaj5_8_phosp42_16_distinct.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados,
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion)
+
+# Para que no se corran las fechas de ajuste que son relativas al ultimo dia de los datos
+#
+df <- dff %>% filter(fecha <=  "2020-06-23")
+
+fit <- fit_ariadnaNL_simulations(df,33,50,res,pob_CABA,0,7) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
+
+#
+# fecha límite del ajuste
+#
+fec_lim <- fit$fec_lim
+fec_min <- fit$fec_min
+fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
+
+#
+# Filtro el primer set 
+#
+fit1 <- fit  %>% filter(siminputrow == 1 ) 
+fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
+
+plot_ajustes_CI(fit1,dff, "CABA")
+
+#
+# Filtro el segundo set 
+#
+fit1 <- fit  %>% filter(siminputrow == 2 ) 
+fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
+
+plot_ajustes_CI(fit1,dff, "CABA")
+
+#
+# Filtro el segundo set 
+#
+fit1 <- fit  %>% filter(siminputrow == 3 ) 
+fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
+
+plot_ajustes_CI(fit1,dff, "CABA")
+
+
+```
+
+* CONCLUSION, hay que restringir parametros por hospitalizaciones usando datos abiertos
+

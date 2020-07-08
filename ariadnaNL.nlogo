@@ -28,6 +28,7 @@ globals [ total-patches
           nro-fallecidos       ;
           nro-recuperados      ;
           nro-hospitalizados
+          nro-casos-sintomaticos
 
 ]
 
@@ -284,8 +285,9 @@ to infeccion-local-estado [prop-horas]
      estado = 3 [
         if random-float 1 < lambda_p
         [
-          ;;show "Entra en estado 5 Sintomatico"
+          ;show "Entra en estado 5 Sintomatico"
           set estado 5
+          set nro-casos-sintomaticos nro-casos-sintomaticos + 1
         ]
      ]
      estado = 4 [
@@ -298,19 +300,19 @@ to infeccion-local-estado [prop-horas]
      estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-saturado
         if random-float 1 < lambda_h
         [
-          ifelse random-float 1 < fallecido-sin-hospitalizacion [
-              set estado 7
-              ;;print "Fallecido sin hospitalizar"
-          ]
+          ifelse random-float 1 < proporcion-hospitalizados
           [
-            ifelse random-float 1 < proporcion-hospitalizados
+            ;show "Entra en estado 6 Hospitalizado"
+            set estado 6
+            set nro-hospitalizados nro-hospitalizados + 1
+          ][
+            ifelse random-float 1 < fallecido-sin-hospitalizacion [
+              set estado 7
+              ;show "Fallecido sin hospitalizar"
+            ]
             [
-              ;;show "Entra en estado 6 Hospitalizado"
-              set estado 6
-              set nro-hospitalizados nro-hospitalizados + 1
-            ][
               set estado 9                            ;; infectado leve se vuelve a casa a hacer cuarentena NO CONTAGIA
-              ;;show "Entra en estado 9 Leve"
+              ;show "Entra en estado 9 Leve"
             ]
           ]
         ]
@@ -388,11 +390,11 @@ end
 GRAPHICS-WINDOW
 355
 10
-765
-421
+767
+423
 -1
 -1
-2.0
+4.0
 1
 10
 1
@@ -402,10 +404,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--100
-100
--100
-100
+-50
+50
+-50
+50
 0
 0
 1
@@ -861,8 +863,8 @@ fallecido-sin-hospitalizacion
 fallecido-sin-hospitalizacion
 0
 1
-0.05
-0.01
+0.005
+0.001
 1
 NIL
 HORIZONTAL
@@ -874,6 +876,17 @@ MONITOR
 390
 Infectado leve
 count personas with [estado = 9]
+2
+1
+11
+
+MONITOR
+1120
+345
+1285
+390
+NIL
+nro-casos-sintomaticos
 2
 1
 11

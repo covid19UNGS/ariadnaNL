@@ -212,5 +212,18 @@ plot_ajustes_CI <- function(fit,dff,lugar)
       geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
       geom_point(aes(fecha,fallecidos_med),size=0.2,color="red") 
   )
-  
+  return(sum_fit)
+}
+
+
+resultados_fit <- function( fitm )
+{
+  lugar <-  "CABA"
+  fitm <- fitm %>% mutate(uti = hospitalizados_pred*.1,casos_dia = casos_pred - lag(casos_pred)) 
+  hosp <- fitm %>% top_n(10, hospitalizados_pred ) %>% summarise( hospitalizados_pred = mean(hospitalizados_pred),hospitalizados_sd = mean(hospitalizados_pred_sd),uti = mean(uti), uti_sd=.1 * hospitalizados_sd,hosp_fecha_min=min(fecha),hosp_fecha_max=max(fecha))
+  casa <- fitm %>% top_n(20, casos_pred ) %>% summarise(casos_pred = mean(casos_pred),casos_sd=mean(casos_pred_sd))
+  fall <- fitm %>% top_n(20, fallecidos_pred ) %>% summarise(fallecidos_pred = mean(fallecidos_pred),fallecidos_sd=mean(fallecidos_pred_sd))
+  cdia <- fitm %>% top_n(10, casos_dia ) %>% summarise( casos_dia = mean(casos_dia),casos_fecha_min=min(fecha),casos_fecha_max=max(fecha))
+
+  return(cbind(hosp,fall,casa,cdia))
 }

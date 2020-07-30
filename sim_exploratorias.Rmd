@@ -300,6 +300,70 @@ setsim(nl, "simoutput") <- results
 write_simoutput(nl)
 ```
 
+## Simulaciones en NetLogo con 201 - 501 parches 60000 casas 840000 personas
+
+
+```{r sim201_501_beta40_44, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+
+nl@experiment <- experiment(expname="world201_501_Beta40_44_viaje0_2",
+                            outpath=outpath,
+                            repetition=1,
+                            tickmetrics="true",
+                            idsetup="setup",
+                            idgo="go",
+                            runtime=365,
+                            metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos","nro-casos-sintomaticos" ),
+                            variables = list("Horas-en-viaje" = list(values=c(0,1,2,0,1,2,0,1,2,
+                                                                              0,1,2,0,1,2,0,1,2)),
+                                             "beta" = list(values=c(0.40,0.40,0.40,0.42,0.42,0.42,0.44,0.44,0.44,
+                                                                    0.40,0.40,0.40,0.42,0.42,0.42,0.44,0.44,0.44)),
+                                             "world-width" =  list(values=c(201,201,201,201,201,201,201,201,201,
+                                                                            501,501,501,501,501,501,501,501,501)),                     
+                                             "world-height" = list(values=c(201,201,201,201,201,201,201,201,201,
+                                                                            501,501,501,501,501,501,501,501,501))
+                                             ),
+                            constants = list(
+                                             "infectados-iniciales" = 10,
+                                             "max-personas-por-casa" = 10,
+                                             "max-personas-por-trabajo" = 100,
+                                             "Horas-en-trabajo"=8,
+                                             "periodo-latencia"=3.6,
+                                             "Proporcion-asintomaticos"=0.43,
+                                             "periodo-presintomatico"=1.5,
+                                             "periodo-asintomatico"= 7.0,
+                                             "periodo-hospitalizacion-fallecido" = 13.2,
+                                             "periodo-hospitalizacion-recuperado" = 15,
+                                             "Proporcion-fallecimiento-saturada"= 0.15,
+                                             "proporcion-hospitalizados"= 0.16,
+                                             "Fallecido-sin-hospitalizacion"=0.005,
+                                             "Proporcion-fallecimiento-hospitalizados"=0.058,
+                                             "periodo-pre-hospitalizacion"= 2.5,
+                                             "capacidad-de-camas"= 100000
+                                             ))
+
+#
+# Set a distinct design 
+#
+nl@simdesign <- simdesign_distinct(nl=nl,nseeds=10)
+
+# run in Paralell 
+#
+require(future)
+plan(multisession)
+require(tictoc)
+tic()
+results <- run_nl_all(nl,split = 9)
+toc()
+plan(sequential)
+names(results)
+
+#
+# Write the output
+#
+setsim(nl, "simoutput") <- results 
+write_simoutput(nl)
+```
+
 ## Plots 
 
 ```{r NL_plots, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
@@ -315,13 +379,15 @@ list.files("Simulations")
 #
 # res %>% group_by(siminputrow,random_seed) %>% summarise(n=n(),pob=max(count_personas))
 # 
-res <- read_netlogo_simul("Simulations/world101_Beta40_50_viaje0_2_ff.csv",skip = 0) %>% 
+res <- read_netlogo_simul("Simulations/world201_501_Beta40_44_viaje0_2_distinct.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
                                                 casos = nro_fallecidos+ nro_recuperados,
-                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas)) 
-ggplot( res, aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom")
+                                                fatalidad = nro_fallecidos / casos * 100,  
+                                                poblacion= round(world_width*world_height * (max_personas_por_casa/2 ) * 0.73)) 
 
-ggplot( res, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_wrap(~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + scale_y_log10()
+ggplot( res , aes(step,nro_fallecidos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion ~beta, scales="free_y") + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom")
+
+ggplot( res, aes(step,casos, colour=factor(Horas_en_viaje))) + geom_point(size=0.1) + facet_grid(poblacion~beta) + scale_color_viridis_d(name="Horas de viaje") + theme(legend.position="bottom") + scale_y_log10()
 
 res <- read_netlogo_simul("Simulations/world201_Beta40_50_viaje0_2_ff.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
@@ -400,7 +466,7 @@ cor<-read_csv('https://docs.google.com/spreadsheets/d/16-bnsDdmmgtSxdWbVMboIHo5F
 # unique(cor$osm_admin_level_4)
 
 pob_CABA <- 2890000
-dff <- cor %>% filter( osm_admin_level_4 =="CABA") %>% mutate(fecha=dmy(fecha), dias =as.numeric( fecha - min(fecha)),prop_casos=cumsum(nue_casosconf_diff)/pob_CABA,casos=cumsum(nue_casosconf_diff),fallecidos=cumsum(nue_fallecidos_diff), prop_fallecidos=fallecidos/pob_CABA) %>% select(fecha,dias,casos,prop_casos,fallecidos,prop_fallecidos,nue_fallecidos_diff)
+dff <- cor %>% filter( osm_admin_level_4 =="CABA") %>% mutate(fecha=dmy(fecha), dias =as.numeric( fecha - min(fecha)),prop_casos=cumsum(nue_casosconf_diff)/pob_CABA,casos=cumsum(nue_casosconf_diff),fallecidos=cumsum(nue_fallecidos_diff), prop_fallecidos=fallecidos/pob_CABA,casos_dia = nue_casosconf_diff) %>% select(fecha,dias,casos,prop_casos,fallecidos,prop_fallecidos,nue_fallecidos_diff,casos_dia)
 
 
 # Para que no se corran las fechas de ajuste que son relativas al ultimo dia de los datos

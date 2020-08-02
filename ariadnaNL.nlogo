@@ -10,6 +10,7 @@ personas-own [ estado           ; 1 suceptible, 2 latente, 3 presintomatico , 4 
 patches-own [ lugar             ;; 1= casa 2=trabajo 3=Hospital
               nro-personas
               mu_ie             ;; de infectados a latentes del parche
+              fallecidos        ;; Fallecidos de esa casa
 
 ]
 
@@ -29,6 +30,8 @@ globals [ total-patches
           nro-recuperados      ;
           nro-hospitalizados
           nro-casos-sintomaticos
+
+          tasa-de-ataque       ; por casa calculada al final de la epidemia
 
 ]
 
@@ -71,7 +74,7 @@ to setup-ini
         set donde 1
         set estado 1 ;; suceptible
         set mi-casa patch-here
-        set-color-persona
+        ;set-color-persona
         fd 0.2
 
       ]
@@ -87,6 +90,7 @@ to setup-ini
   set rho_r    1 - exp ( - 1 / periodo-hospitalizacion-recuperado )
 
   set horas-de-dormir 8
+  set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo - horas-en-viaje
 
 end
 
@@ -101,7 +105,7 @@ to setup
   ask n-of infectados-iniciales personas
   [
     set estado 2
-    set-color-persona
+    ;set-color-persona
   ]
 
   reset-ticks
@@ -112,7 +116,6 @@ to go
 
   ;; Calcula proporcion de horas en casa o trabajo
   ;;
-  set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo - horas-en-viaje
   let prop-horas-en-trabajo horas-en-trabajo / ( 24 - horas-de-dormir )
   let prop-horas-en-casa horas-en-casa / ( 24 - horas-de-dormir )
   let prop-horas-en-viaje horas-en-viaje / ( 24 - horas-de-dormir )
@@ -123,6 +126,7 @@ to go
 
   if ticks = 365 ;; simulation runs for 365 days
   [
+    set tasa-de-ataque mean [ ( count personas-here with [ estado > 1 ] + fallecidos ) / nro-personas ] of patches with [lugar = 1 and nro-personas > 0]
     stop
   ]
   ;;
@@ -168,8 +172,8 @@ to ir-al-trabajo
     [
       (ifelse donde = 1 [
         move-to mi-trabajo
-        lt 10
-        fd 0.2
+        ;;lt 10
+        ;;fd 0.2
         set donde 2
         ]
         donde = 2 [
@@ -185,8 +189,8 @@ to volver-a-casa
     [  ;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado, 9 infectado leve
       if donde != 1 [
         move-to mi-casa
-        rt 10
-        fd 0.2
+        ;;rt 10
+        ;;fd 0.2
         set donde 1
         set nro-personas nro-personas + 1
       ]
@@ -195,7 +199,7 @@ to volver-a-casa
      if donde != 3
      [
         move-to hospital
-        fd 0.2
+        ;;fd 0.2
         set donde 3
         set nro-personas nro-personas + 1
      ]
@@ -203,7 +207,10 @@ to volver-a-casa
    estado = 7 [
      set nro-personas nro-personas - 1
      set nro-fallecidos nro-fallecidos + 1
-     ;;show "Alguien se murió"
+     move-to mi-casa
+     set fallecidos fallecidos + 1
+     ;show (word "Fallecidos : " fallecidos "en " mi-casa)
+     ;;ask mi-casa [ set fallecidos fallecidos + 1 ]
      die
    ]
    estado = 9 [
@@ -211,7 +218,7 @@ to volver-a-casa
      [
         ;;print "Infectado leve se va a la casa"
         move-to mi-casa
-        fd 0.2
+        ;;fd 0.2
         set donde 1
         set nro-personas nro-personas + 1
      ]
@@ -358,7 +365,7 @@ to infeccion-local-estado [prop-horas]
        ]
      ]
     )
-    set-color-persona
+    ;set-color-persona
 
   ]
 
@@ -383,8 +390,9 @@ to infeccion-viaje [prop-horas]
   ]
 end
 
+
 to set-color-persona
-  set color scale-color red estado 0 ( 9 + 1 )
+  ;;set color scale-color red estado 0 ( 9 + 1 )
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -408,8 +416,8 @@ GRAPHICS-WINDOW
 50
 -50
 50
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -455,7 +463,7 @@ beta
 beta
 0
 1
-0.35
+0.41
 .01
 1
 NIL
@@ -563,10 +571,10 @@ cant-casas
 BUTTON
 240
 230
-327
+342
 263
-go step
-go
+go profiler
+setup\nprofiler:start\nrepeat 365 [go]\nprofiler:stop          ;; stop profiling\nprint profiler:report  ;; view the results\nprofiler:reset         ;; clear the 
 NIL
 1
 T
@@ -610,7 +618,7 @@ Proporcion-asintomaticos
 Proporcion-asintomaticos
 0
 1
-0.45
+0.43
 .01
 1
 NIL
@@ -670,7 +678,7 @@ Proporcion-fallecimiento-hospitalizados
 Proporcion-fallecimiento-hospitalizados
 0
 1
-0.08
+0.06
 .01
 1
 NIL
@@ -822,8 +830,8 @@ proporcion-fallecimiento-saturada
 proporcion-fallecimiento-saturada
 0
 1
-0.5
-0.1
+0.15
+0.01
 1
 NIL
 HORIZONTAL
@@ -848,7 +856,7 @@ proporcion-hospitalizados
 proporcion-hospitalizados
 0
 1
-0.85
+0.16
 .01
 1
 NIL

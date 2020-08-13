@@ -417,9 +417,9 @@ write_simoutput(nl)
 
 ## Mas simulaciones con libre beta y prop_fallec_hospt = 0.08
 
-```{r gen_fit_lhs_phosp08_501, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+```{r gen_fit_lhs_pfhosp09_500, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
-nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3_trabajo2_8_phosp08_500",
+nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3_trabajo2_8_pfhosp09_500",
                             outpath=outpath,
                             repetition=1,
                             tickmetrics="true",
@@ -442,9 +442,9 @@ nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3_trabajo2_8_phos
                                              "periodo-asintomatico"= 7.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
-                                             "Proporcion-fallecimiento-saturada"= 0.1,
-                                             "proporcion-hospitalizados"= 0.16,
-                                             "Proporcion-fallecimiento-hospitalizados"=0.058,
+                                             "Proporcion-fallecimiento-saturada"= 0.30,
+                                             "Proporcion-fallecimiento-hospitalizados"=0.0925,
+                                             "proporcion-hospitalizados"= 0.19,                                             
                                              "Fallecido-sin-hospitalizacion"=0.005,
                                              "periodo-pre-hospitalizacion"= 2.5,
                                              "capacidad-de-camas"= 10000
@@ -457,7 +457,7 @@ nl@experiment <- experiment(expname="world201_Beta30_50_viaje0_3_trabajo2_8_phos
 #
 nl@simdesign <- simdesign_lhs(nl=nl,
                                samples=500,
-                               nseeds=4,
+                               nseeds=5,
                                precision=2)
 
 # run in Paralell 
@@ -493,37 +493,24 @@ list.files("Simulations")
 
 # Ajuste 1
 #
-res <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo2_8_500_lhs.csv",skip = 0) %>%
-                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas),
-                                                casos = nro_fallecidos+ nro_recuperados,
-                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
-                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion)
-
-res1 <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo2_8_501_lhs.csv",skip = 0) %>%
-                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas),
-                                                casos = nro_fallecidos+ nro_recuperados,
-                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
-                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,
-                                                siminputrow = max(res$siminputrow) +  siminputrow)
 
 # Ajuste 2 
 # Parametros de ultimas simulaciones despues de acotar con simulaciones anteriores
 #
 
-res2 <- read_netlogo_simul("Simulations/world201_Beta39_42_viaje1_3_trabajo5_8_pfalhos05_9_500_lhs.csv",skip = 0) %>% 
+res <- read_netlogo_simul("Simulations/world201_Beta39_42_viaje1_3_trabajo5_8_pfalhos05_9_500_lhs.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
                                                 casos = nro_fallecidos+ nro_recuperados,
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
-                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,
-                                                siminputrow = max(res1$siminputrow) +  siminputrow
-                                                )
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion                                                            )
 
 res6 <- read_netlogo_simul("Simulations/world201_Beta39_42_viaje1_3_trabajo5_8_pfalhos05_9_501_lhs.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
                                                 casos = nro_fallecidos+ nro_recuperados,
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
                                                 prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,
-                                                siminputrow = max(res2$siminputrow) +  siminputrow)
+                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion,
+                                                siminputrow = max(res1$siminputrow) +  siminputrow)
                                                 
 
 
@@ -534,6 +521,7 @@ res3 <- read_netlogo_simul("Simulations/world201_Beta41_viaje0_3_trabajo2_8_lhs.
                                                 casos = nro_fallecidos+ nro_recuperados,
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
                                                 prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,
+                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion,
                                                 siminputrow = max(res6$siminputrow) +  siminputrow)
 
 res7 <- read_netlogo_simul("Simulations/world201_Beta41_viaje0_3_trabajo2_8_501_lhs.csv",skip = 0) %>% 
@@ -541,6 +529,7 @@ res7 <- read_netlogo_simul("Simulations/world201_Beta41_viaje0_3_trabajo2_8_501_
                                                 casos = nro_fallecidos+ nro_recuperados,
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
                                                 prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,
+                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion,
                                                 siminputrow = max(res3$siminputrow) +  siminputrow)
 
 # Parametros simulaciones mas acotadas 
@@ -569,7 +558,16 @@ res8 <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo2_8_p
                                                 siminputrow = max(res4$siminputrow) +  siminputrow)
 
 
-res <- bind_rows(res,res1,res2,res6,res3,res7,res4,res5,res8)
+
+res <- read_netlogo_simul("Simulations/world201_Beta30_50_viaje0_3_trabajo2_8_pfhosp09_500_lhs.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados,
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion,
+                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion) #,
+                                                siminputrow = max(res4$siminputrow) +  siminputrow)
+
+res <- bind_rows(res,res6,res3,res7,res4,res5,res8)
 rm(res1,res2,res3,res4,res5,res6,res7,res8)
 
 #
@@ -611,7 +609,7 @@ nrow(sel_fit)
 #
 #fit <- fit  %>% filter( siminputrow %in% sel_fit$siminputrow)
 
-sel_fit <- sel_fit  %>% filter(Horas_en_trabajo>7, Horas_en_viaje>2) %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq,siminputrow)
+sel_fit <- sel_fit  %>% filter(Horas_en_trabajo>6, Horas_en_viaje>2) %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,ssq,siminputrow)
 nrow(sel_fit)
 
 #sel_fit <- sel_fit %>% filter(ssq==min(ssq))
@@ -740,8 +738,6 @@ result <- bind_rows(result, resultados_fit( fitm) %>% mutate(lugar="CABA",period
 
 ```
 
-Ajusta selecciono el beta mas parecido aumentaron las horas en trabajo  
-
 ## Ajuste despues de los primeros 93-121 días 06/06 hasta 1/07 
 
 ```{r fit_lhs93-121, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
@@ -861,15 +857,19 @@ ggplot(params, aes(beta,Horas_en_trabajo,colour=periodo_fit)) + geom_point() + s
 ggplot(params, aes(beta,Proporcion_fallecimiento_hospitalizados,colour=periodo_fit)) + geom_point() + scale_color_viridis_d(name="Período\nAjuste") +
   xlab("Tasa de infección (beta)") + ylab("Proporcion Hospitalizados")
 
-params <- params %>% mutate( lugar = "CABA")
-saveRDS(params,"Simulations/fitted_params.rds")
+params <- params %>% mutate( lugar = "CABA09")
 
 knitr::kable(params %>% group_by(periodo_fit) %>%  select(-poblacion,-world_width) %>% summarise_if(is.numeric,mean), digits = 3)
 
 
 knitr::kable(result %>% select(lugar, periodo_fit, everything()) , digits = 0)
 
-params <- readRDS("Simulations/fitted_params.rds")
+#
+# Guardar set de parametros en archivo
+#
+params1 <- readRDS("Simulations/fitted_params.rds")
+params <- bind_rows(params1,params)
+saveRDS(params,"Simulations/fitted_params.rds")
 
 
 ```
@@ -893,15 +893,45 @@ params <- readRDS("Simulations/fitted_params.rds")
 |CABA  |121-139     |               24216|               878| 2422|     88|2020-09-27     |2020-10-06     |           14960|           371|    1761137|    29474|     17294|2020-09-18      |2020-10-01      |
 
 
+* Parametros Ajustados con proporción de fallecidos = 0.0925 proporcion hospitalizados = 0.19 
+
+| periodo_fit | beta | Horas_en_viaje | Horas_en_trabajo | Proporcion_fallecimiento_hospitalizados | proporcion_hospitalizados | Fallecido_sin_hospitalizacion | ssq |
+|:----------- | ----:| --------------:| ----------------:| ---------------------------------------:| -------------------------:| -----------------------------:| ---:|
+| 0-33        | 0.37 |           2.06 |             6.20 |                                   0.092 |                      0.19 |                         0.005 |   0 |
+| 33-63       | 0.45 |           1.40 |             3.57 |                                   0.092 |                      0.19 |                         0.005 |   0 |
+| 63-93       | 0.42 |           2.92 |             2.13 |                                   0.092 |                      0.19 |                         0.005 |   0 |
+| 93-121      | 0.46 |           0.43 |             5.03 |                                   0.092 |                      0.19 |                         0.005 |   0 |
+| 121-139     | 0.41 |           2.74 |             2.11 |                                   0.092 |                      0.19 |                         0.005 |   0 |
+
+|lugar |periodo_fit | hospitalizados_pred| hospitalizados_sd|  uti| uti_sd|hosp_fecha_min |hosp_fecha_max | fallecidos_pred| fallecidos_sd| casos_pred| casos_sd| casos_dia|casos_fecha_min |casos_fecha_max |
+|:-----|:-----------|-------------------:|-----------------:|----:|------:|:--------------|:--------------|---------------:|-------------:|----------:|--------:|---------:|:---------------|:---------------|
+|CABA  |0-33        |               17250|              9898| 1725|    990|2020-09-28     |2020-10-08     |           16655|          9331|    1275044|   712799|     10497|2020-09-22      |2020-10-10      |
+|CABA  |33-63       |               29046|              1725| 2905|    172|2020-09-20     |2020-09-29     |           25331|           875|    1865175|     9607|     17518|2020-09-14      |2020-09-27      |
+|CABA  |63-93       |               24913|              1822| 2491|    182|2020-09-27     |2020-10-06     |           23225|           359|    1718794|    25369|     15167|2020-09-16      |2020-10-04      |
+|CABA  |93-121      |               31666|              1920| 3167|    192|2020-09-21     |2020-10-02     |           26145|           490|    1935206|     9783|     19078|2020-09-20      |2020-10-03      |
+|CABA  |121-139     |               19847|              2937| 1985|    294|2020-10-10     |2020-10-21     |           21251|           738|    1586102|    31392|     12195|2020-10-11      |2020-10-30      | 
+
+
 ## Simulaciones usando parametros ajustados para calcular intervalos de confianza  
 
-* Sin limitacion de camas 70000
 
-* _Variables_: beta, Horas_en_viaje, poblacion, world_width
+* _Variables_: beta, Horas_en_viaje, Horas_en_trabajo
 
-```{r gen_fited_sim401, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+* Con limitacion de camas 357 
 
-nl@experiment <- experiment(expname="world201_Beta39_44_viaje16_23_trabaj51_78_pfhosp59_88",
+* Cantidad equivalente de camas para la poblacion del modelo 150000 - 148186
+      
+      - UTI CABA segun chequeado  = 1027/pob_CABA*148186 = 53
+      
+    * Calculado segun gobierno al 11/08
+      - Graves TOTAL = 298/.6622 = 450
+      - Moderados TOTAL = 779/.5193 = 1500
+      - Leves TOTAL =  2119/.4238 = 5000
+      - TOTAL de camas 6950 = equivalente 6950/pob_CABA*148186 = 357
+
+```{r gen_fited_sim_pfhosp09, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+
+nl@experiment <- experiment(expname="world201_Beta37_46_viaje3_0_trabaj2_6_pfhosp09",
                             outpath=outpath,
                             repetition=1,
                             tickmetrics="true",
@@ -909,10 +939,9 @@ nl@experiment <- experiment(expname="world201_Beta39_44_viaje16_23_trabaj51_78_p
                             idgo="go",
                             runtime=365,
                             metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos","nro-casos-sintomaticos" ),
-                            variables = list("beta" = list(values=c(0.397,0.408,0.407,0.44)),
-                                             "Horas-en-viaje" = list(values=c(1.984,2.356,1.553,1.6)),
-                                             "Horas-en-trabajo"=list(values=c(5.293,5.129,5.313,7.87)),
-                                             "Proporcion-fallecimiento-hospitalizados"=list(values=c(0.059,0.07,0.088,0.08))
+                            variables = list("beta" = list(values=c(0.37,0.45,0.42,0.46,0.41)),
+                                             "Horas-en-viaje" = list(values=c(2.06,1.40,2.92,0.43,2.74)),
+                                             "Horas-en-trabajo"=list(values=c(6.20,3.57,2.13,5.03,2.11))
                                              ),
                             constants = list("world-width" = 201,
                                              "world-height" = 201,
@@ -925,11 +954,12 @@ nl@experiment <- experiment(expname="world201_Beta39_44_viaje16_23_trabaj51_78_p
                                              "periodo-asintomatico"= 7.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
-                                             "Proporcion-fallecimiento-saturada"= 0.15,
-                                             "proporcion-hospitalizados"= 0.16,
+                                             "Proporcion-fallecimiento-saturada"= 0.30,
+                                             "proporcion-hospitalizados"= 0.19,
+                                             "Proporcion-fallecimiento-hospitalizados"=0.092,
                                              "Fallecido-sin-hospitalizacion"=0.005,
                                              "periodo-pre-hospitalizacion"= 2.5,
-                                             "capacidad-de-camas"= 70000
+                                             "capacidad-de-camas"= 357
                                              ))
 
 #
@@ -944,7 +974,7 @@ require(future)
 plan(multisession)
 require(tictoc)
 tic()
-results <- run_nl_all(nl,split = 4)
+results <- run_nl_all(nl,split = 5)
 toc()
 plan(sequential)
 names(results)
@@ -965,7 +995,7 @@ write_simoutput(nl)
 
 * _Variables_: beta, Horas_en_viaje, poblacion
 
-```{r gen_fited_sim41, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
+```{r gen_fited_sim41, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
 nl@experiment <- experiment(expname="world201_Beta41_viaje1_2_trabaj4_75_pfhosp58",
                             outpath=outpath,
@@ -978,7 +1008,7 @@ nl@experiment <- experiment(expname="world201_Beta41_viaje1_2_trabaj4_75_pfhosp5
                             variables = list("beta" = list(values=c(0.41,0.41,0.41,0.41)),
                                              "Horas-en-trabajo"=list(values=c(7.5,6,5,4)),
                                              "Horas-en-viaje" = list(values=c(2.4,1,2,1)),
-                              "Proporcion-fallecimiento-hospitalizados"=list(values=c(0.058,0.058,0.058,0.058))
+                              
                                              ),
                             constants = list("world-width" = 201,
                                              "world-height" = 201,
@@ -991,8 +1021,9 @@ nl@experiment <- experiment(expname="world201_Beta41_viaje1_2_trabaj4_75_pfhosp5
                                              "periodo-asintomatico"= 7.0,
                                              "periodo-hospitalizacion-fallecido" = 13.2,
                                              "periodo-hospitalizacion-recuperado" = 15,
-                                             "Proporcion-fallecimiento-saturada"= 0.15,
-                                             "proporcion-hospitalizados"= 0.16,
+                                             "Proporcion-fallecimiento-saturada"= 0.30,
+                                             "Proporcion-fallecimiento-hospitalizados"=0.0925,
+                                             "proporcion-hospitalizados"= 0.19,
                                              "Fallecido-sin-hospitalizacion"=0.005,
                                              "periodo-pre-hospitalizacion"= 2.5,
                                              "capacidad-de-camas"= 70000
@@ -1028,7 +1059,7 @@ write_simoutput(nl)
 
 list.files("Simulations")
 
-res <- read_netlogo_simul("Simulations/world201_Beta39_44_viaje16_23_trabaj51_78_pfhosp59_88_distinct.csv",skip = 0) %>% 
+res <- read_netlogo_simul("Simulations/world201_Beta37_46_viaje3_0_trabaj2_6_pfhosp09_distinct.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
                                                 casos = nro_fallecidos+ nro_recuperados, 
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
@@ -1048,13 +1079,13 @@ knitr::kable(fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcio
 #
 # fecha límite del ajuste
 #
-fec_lim <-ymd("2020-07-19")  
-fec_min <-ymd("2020-07-01")
 fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA)
 
 #
 # Filtro el primer set 
 #
+fec_lim <-ymd("2020-03-02")
+fec_min <-ymd("2020-04-04")
 fit1 <- fit  %>% filter(siminputrow == 1 ) 
 fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
 
@@ -1064,8 +1095,8 @@ result <- resultados_fit( fitm) %>% mutate(lugar="CABA",periodo_fit="121-139")
 #
 # Filtro el segundo set 93-121
 #
-fec_lim <-ymd("2020-07-01")  
-fec_min <-ymd("2020-06-03")
+fec_lim <-ymd("2020-05-04")  
+fec_min <-ymd("2020-04-04")
 
 fit1 <- fit  %>% filter(siminputrow == 2 ) 
 fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
@@ -1091,8 +1122,8 @@ result <- bind_rows(result,resultados_fit( fitm) %>% mutate(lugar="CABA",periodo
 #
 # Filtro el 4ro set 33-63
 #
-fec_lim <-ymd("2020-05-04")  
-fec_min <-ymd("2020-04-04")
+fec_lim <-ymd("2020-07-01")  
+fec_min <-ymd("2020-06-03")
 
 fit1 <- fit  %>% filter(siminputrow == 4 ) 
 fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
@@ -1100,11 +1131,24 @@ fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados
 fitm <- plot_ajustes_CI(fit1,dff, "CABA")
 result <- bind_rows(result,resultados_fit( fitm) %>% mutate(lugar="CABA",periodo_fit="33-63"))
 
+
+# Filtro el 5to set
+#
+fec_lim <-ymd("2020-07-19")  
+fec_min <-ymd("2020-07-01")
+fit1 <- fit  %>% filter(siminputrow == 5 ) 
+fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
+
+fitm <- plot_ajustes_CI(fit1,dff, "CABA")
+result <- bind_rows(result,resultados_fit( fitm) %>% mutate(lugar="CABA",periodo_fit="121-139"))
+
+
 knitr::kable(result %>% select(lugar, periodo_fit, everything()) , digits = 0)
+plot_escenarios_CI(fit,dff, "Ajuste_CABA",1027,TRUE)
 
 ```
 
-
+* De este Set de parametros ajustados se podría decir que el set 4 anda bien para los primeros 33-63 dias, luego el set 1 de 63 - 139
 
 ## Leer simulaciones de parametros ajustados  0-33 dias con escenarios  
 

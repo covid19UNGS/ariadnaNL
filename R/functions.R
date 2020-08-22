@@ -82,21 +82,31 @@ rename_netlogo_simul <- function(mdl){
 }
 
 
-plot_ajustes <- function(fit,dff,lugar,camas_uti=1027)
+plot_ajustes <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
 {
+  fname <- paste0("Figures/Ajuste_", lugar)
   print(
     ggplot(fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3)
     + ylab(paste("Fallecidos",lugar)) + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
+  fname1 <- paste0(fname,"_Fallecidos_log.pdf")
+  if(save_plots)
+    ggsave(fname1, width=6,height=5,units="in",dpi=300)
   
   print( 
     ggplot(fit , aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10()   +  geom_vline(xintercept = c(fec_lim,fec_min) ,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ylab(paste("Fallecidos",lugar)) + xlab("") + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  
+  fname1 <- paste0(fname, "_Fallecidos.pdf")
+  if(save_plots)
+    ggsave(fname1, width=6,height=5,units="in",dpi=300)
+
   print(
   ggplot(fit, aes(fecha,hospitalizados_pred)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab(paste("Hospitalizados",lugar)) + xlab("") + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) 
   )
+  fname1 <- paste0(fname, "_Hospitalizados.pdf")
+  if(save_plots)
+    ggsave(fname1, width=6,height=5,units="in",dpi=300)
   
   print( 
   ggplot(fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
@@ -105,13 +115,26 @@ plot_ajustes <- function(fit,dff,lugar,camas_uti=1027)
   
   print(
     ggplot(fit , aes(fecha,casos_pred)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) +
-      scale_y_log10() + geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
+      geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
       geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
       geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + 
       ylab(paste("Casos",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-
+  fname1 <- paste0(fname, "_Casos.pdf")
+  if(save_plots)
+    ggsave(fname1, width=6,height=5,units="in",dpi=300)
+  
+  fit1 <- fit %>% mutate(casos_dia =  casos_pred - lag(casos_pred),casos_dia = ifelse(casos_dia>0,casos_dia,0))
+  print(
+    ggplot(fit1 , aes(fecha,casos_dia)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos_dia),color='red',size=.5) +
+      scale_y_log10() + geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
+      geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+      geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + 
+      ylab(paste("Casos Diarios",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+  )
+  
   fitm <- fit %>% group_by(step) %>% summarise(fecha=max(fecha), fallecidos_pred_sd=sd(fallecidos_pred),
                                                hospitalizados_pred_sd=sd(hospitalizados_pred),
                                                hospitalizados_pred=mean(hospitalizados_pred),
@@ -148,17 +171,25 @@ plot_ajustes <- function(fit,dff,lugar,camas_uti=1027)
 
 plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
 {
-  sum_fit <- fit %>% mutate(uti = hospitalizados_pred*.1) %>% group_by(fecha) %>% 
+  sum_fit <- fit %>% 
+    mutate(uti = hospitalizados_pred*.1,casos_dia =  casos_pred - lag(casos_pred),casos_dia = ifelse(is.na(casos_dia),0,casos_dia)) %>% 
+    group_by(fecha) %>% 
     summarise( fallecidos_hi95=quantile(fallecidos_pred, 0.975),fallecidos_lo95=quantile(fallecidos_pred, 0.025),fallecidos_med=mean(fallecidos_pred),
                fallecidos_sd=sd(fallecidos_pred),hospitalizados_hi95=quantile(hospitalizados_pred, 0.975),hospitalizados_lo95=quantile(hospitalizados_pred, 0.025),
                hospitalizados_med=mean(hospitalizados_pred),uti_hi95=quantile(uti, 0.975),uti_lo95=quantile(uti, 0.025),uti_med=mean(uti),
-               casos_hi95=quantile(casos_pred, 0.975),casos_lo95=quantile(casos_pred, 0.025),casos_med=mean(casos_pred),sintomaticos_med=mean(sintomaticos_pred),sintomaticos_hi95=quantile(sintomaticos_pred, 0.975),sintomaticos_lo95=quantile(sintomaticos_pred, 0.025))
+               casos_hi95=quantile(casos_pred, 0.975),casos_lo95=quantile(casos_pred, 0.025),casos_med=mean(casos_pred),
+               sintomaticos_med=mean(sintomaticos_pred),sintomaticos_hi95=quantile(sintomaticos_pred, 0.975),sintomaticos_lo95=quantile(sintomaticos_pred, 0.025),
+               casos_dia_med=mean(casos_dia),casos_dia_hi95=quantile(casos_dia, 0.975),casos_dia_lo95=quantile(casos_dia, 0.025))
   
   print(
   
       ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+10), aes(fecha,fallecidos_med)) + geom_point(size=0.1) +
         geom_ribbon(aes(ymin=fallecidos_lo95, ymax=fallecidos_hi95), linetype=2, alpha=0.1) +
-        geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +  
+        geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  
+        geom_vline(xintercept = today(),color="black",linetype = 3) + 
+        geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + 
+        geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+        geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +  
         ylab(paste("Fallecidos",lugar)) + 
         xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
@@ -166,20 +197,32 @@ plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
   print(
   ggplot(sum_fit, aes(fecha,fallecidos_med)) + geom_point(size=0.1) + 
     geom_ribbon(aes(ymin=fallecidos_lo95, ymax=fallecidos_hi95), linetype=2, alpha=0.1) +
-    geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +  
+    geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + #scale_y_log10() +  
+    geom_vline(xintercept = today(),color="black",linetype = 3) + 
+    geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + 
+    geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+    geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +  
     ylab(paste("Fallecidos",lugar)) + 
     xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
   
   print(
-  ggplot(sum_fit, aes(fecha,hospitalizados_med)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) +
+  ggplot(sum_fit, aes(fecha,hospitalizados_med)) + geom_point(size=0.1) +    
+    geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) +
+    geom_vline(xintercept = today(),color="black",linetype = 3) + 
+    geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+    geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
     geom_ribbon(aes(ymin=hospitalizados_lo95, ymax=hospitalizados_hi95), linetype=2, alpha=0.1) +  
     ylab(paste("Hospitalizados",lugar)) + 
     xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
   
   print(
-  ggplot(sum_fit, aes(fecha,uti_med)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) +
+  ggplot(sum_fit, aes(fecha,uti_med)) + geom_point(size=0.1) +  #scale_y_log10() +  
+    geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) +
+    geom_vline(xintercept = today(),color="black",linetype = 3) + 
+    geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+    geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
     geom_ribbon(aes(ymin=uti_lo95, ymax=uti_hi95), linetype=2, alpha=0.1) + geom_hline(yintercept = camas_uti, color= "red", linetype=2) +  
     ylab(paste("UTI",lugar)) + 
     xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
@@ -191,7 +234,10 @@ plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
   #
   
   print(
-  ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,casos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+  ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,casos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  
+    geom_vline(xintercept = today(),color="black",linetype = 3) + 
+    geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
+    geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
     geom_ribbon(aes(ymin=casos_lo95, ymax=casos_hi95), linetype=2, alpha=0.1)  +  
     ylab(paste("Casos",lugar)) + 
@@ -200,7 +246,10 @@ plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
 
     
   print(
-  ggplot(sum_fit, aes(fecha,casos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+  ggplot(sum_fit, aes(fecha,casos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + #scale_y_log10() +  
+    geom_vline(xintercept = today(),color="black",linetype = 3) + 
+    geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
+    geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
     geom_ribbon(aes(ymin=casos_lo95, ymax=casos_hi95), linetype=2, alpha=0.1) +  
     ylab(paste("Casos",lugar)) + 
@@ -209,7 +258,10 @@ plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
   
 
   print(
-    ggplot(sum_fit, aes(fecha,sintomaticos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+    ggplot(sum_fit, aes(fecha,sintomaticos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + # scale_y_log10() +  
+      geom_vline(xintercept = today(),color="black",linetype = 3) + 
+      geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
+      geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
       geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
       geom_ribbon(aes(ymin=sintomaticos_lo95, ymax=sintomaticos_hi95), linetype=2, alpha=0.1) +  
       ylab(paste("Casos Sintomáticos",lugar)) + 
@@ -219,7 +271,10 @@ plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
   print(
     ggplot(sum_fit, aes(fecha,hospitalizados_med)) + geom_point(size=0.1) +  
       geom_ribbon(aes(ymin=hospitalizados_lo95, ymax=hospitalizados_hi95), linetype=2, alpha=0.1) +  
-      scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab(paste("Hospitalizados/Fallecidos",lugar)) + xlab("") + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
+      scale_y_log10() +
+      geom_vline(xintercept = today(),color="black",linetype = 3) + 
+      geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
+      ylab(paste("Hospitalizados/Fallecidos",lugar)) + xlab("") + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
       geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
       geom_point(aes(fecha,fallecidos_med),size=0.2,color="red") 
   )

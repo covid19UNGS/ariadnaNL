@@ -89,14 +89,14 @@ plot_ajustes <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
     ggplot(fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3)
     + ylab(paste("Fallecidos",lugar)) + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname,"_Fallecidos_log.pdf")
+  fname1 <- paste0(fname,"_Fallecidos_log.png")
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
   
   print( 
     ggplot(fit , aes(fecha,fallecidos_pred)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10()   +  geom_vline(xintercept = c(fec_lim,fec_min) ,color="black",linetype = 3) + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) + ylab(paste("Fallecidos",lugar)) + xlab("") + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Fallecidos.pdf")
+  fname1 <- paste0(fname, "_Fallecidos.png")
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
 
@@ -104,7 +104,7 @@ plot_ajustes <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
   ggplot(fit, aes(fecha,hospitalizados_pred)) + geom_point(size=0.1) +  scale_y_log10() +  geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + ylab(paste("Hospitalizados",lugar)) + xlab("") + ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) 
   )
-  fname1 <- paste0(fname, "_Hospitalizados.pdf")
+  fname1 <- paste0(fname, "_Hospitalizados.png")
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
   
@@ -121,7 +121,7 @@ plot_ajustes <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Casos",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Casos.pdf")
+  fname1 <- paste0(fname, "_Casos.png")
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
   
@@ -183,49 +183,54 @@ plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
   
   print(
   
-      ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+10), aes(fecha,fallecidos_med)) + geom_point(size=0.1) +
+      ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+10), aes(fecha,fallecidos_med)) + geom_line(size=0.5, aes(color="Modelo")) +
         geom_ribbon(aes(ymin=fallecidos_lo95, ymax=fallecidos_hi95), linetype=2, alpha=0.1) +
-        geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  
+        geom_point(data=dff,aes(fecha,fallecidos,color="Reportes"),size=.5) + scale_y_log10() +  
         geom_vline(xintercept = today(),color="black",linetype = 3) + 
         geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + 
         geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
         geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +  
         ylab(paste("Fallecidos",lugar)) + 
-        xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+        xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+        scale_color_manual(values = c("black", "red"))  + theme(legend.position=c(0.9,0.1),legend.title=element_blank())
   )
   
   print(
-  ggplot(sum_fit, aes(fecha,fallecidos_med)) + geom_point(size=0.1) + 
+  ggplot(sum_fit, aes(fecha,fallecidos_med)) + geom_line(size=0.5, aes(color="Modelo")) + 
     geom_ribbon(aes(ymin=fallecidos_lo95, ymax=fallecidos_hi95), linetype=2, alpha=0.1) +
-    geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + #scale_y_log10() +  
+    geom_point(data=dff,aes(fecha,fallecidos,color="Reportes"),size=.5) + #scale_y_log10() +  
     geom_vline(xintercept = today(),color="black",linetype = 3) + 
     geom_vline(xintercept =c(fec_lim,fec_min),color="black",linetype = 3)   + 
     geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +  
     ylab(paste("Fallecidos",lugar)) + 
-    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + 
+    scale_color_manual(values = c("black", "red"))  + theme(legend.position=c(0.9,0.1),legend.title=element_blank())
   )
   
   print(
-  ggplot(sum_fit, aes(fecha,hospitalizados_med)) + geom_point(size=0.1) +    
+  ggplot(sum_fit, aes(fecha,hospitalizados_med)) + geom_line(size=0.5, aes(color="Modelo")) +    
     geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) +
     geom_vline(xintercept = today(),color="black",linetype = 3) + 
     geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
     geom_ribbon(aes(ymin=hospitalizados_lo95, ymax=hospitalizados_hi95), linetype=2, alpha=0.1) +  
     ylab(paste("Hospitalizados",lugar)) + 
-    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + 
+    scale_color_manual(values = c("black", "red"))  + theme(legend.position=c(0.9,0.1),legend.title=element_blank())
   )
   
   print(
-  ggplot(sum_fit, aes(fecha,uti_med)) + geom_point(size=0.1) +  #scale_y_log10() +  
+  ggplot(sum_fit, aes(fecha,uti_med)) + geom_line(size=0.5, aes(color="Modelo")) +  #scale_y_log10() +  
     geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) +
     geom_vline(xintercept = today(),color="black",linetype = 3) + 
     geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
-    geom_ribbon(aes(ymin=uti_lo95, ymax=uti_hi95), linetype=2, alpha=0.1) + geom_hline(yintercept = camas_uti, color= "red", linetype=2) +  
+    geom_ribbon(aes(ymin=uti_lo95, ymax=uti_hi95), linetype=2, alpha=0.1) + 
+    geom_hline(aes(yintercept = camas_uti, color= "Camas UTI") , linetype=2) +  
     ylab(paste("UTI",lugar)) + 
-    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")  + 
+    scale_color_manual(values = c("red","black"))  + theme(legend.position=c(0.9,0.1),legend.title=element_blank())
   )
   
   #
@@ -234,42 +239,48 @@ plot_ajustes_CI <- function(fit,dff,lugar,camas_uti=1027)
   #
   
   print(
-  ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,casos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  
+  ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,casos_med)) + geom_line(size=0.5, aes(color="Modelo")) + 
+    geom_point(data=dff,aes(fecha,casos,color="Reportes"),size=.5) + scale_y_log10() +  
     geom_vline(xintercept = today(),color="black",linetype = 3) + 
     geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
     geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
     geom_ribbon(aes(ymin=casos_lo95, ymax=casos_hi95), linetype=2, alpha=0.1)  +  
     ylab(paste("Casos",lugar)) + 
-    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + 
+    scale_color_manual(values = c("black", "red"))  + theme(legend.position=c(0.9,0.1),legend.title=element_blank())
   )
 
     
   print(
-  ggplot(sum_fit, aes(fecha,casos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + #scale_y_log10() +  
+  ggplot(sum_fit, aes(fecha,casos_med)) + geom_line(size=0.5, aes(color="Modelo")) + 
+    geom_point(data=dff,aes(fecha,casos,color="Reportes"),size=.5) + #scale_y_log10() +  
     geom_vline(xintercept = today(),color="black",linetype = 3) + 
     geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
     geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
     geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
     geom_ribbon(aes(ymin=casos_lo95, ymax=casos_hi95), linetype=2, alpha=0.1) +  
     ylab(paste("Casos",lugar)) + 
-    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")+ 
+    scale_color_manual(values = c("black", "red"))  + theme(legend.position=c(0.9,0.1),legend.title=element_blank())
   )
   
 
   print(
-    ggplot(sum_fit, aes(fecha,sintomaticos_med)) + geom_point(size=0.1) + geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + # scale_y_log10() +  
+    ggplot(sum_fit, aes(fecha,sintomaticos_med)) + geom_line(size=0.5, aes(color="Modelo")) + 
+      geom_point(data=dff,aes(fecha,casos,color="Reportes"),size=.5) + # scale_y_log10() +  
       geom_vline(xintercept = today(),color="black",linetype = 3) + 
       geom_vline(xintercept = c(fec_lim,fec_min),color="black",linetype = 3) + 
       geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  +
       geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3) +
       geom_ribbon(aes(ymin=sintomaticos_lo95, ymax=sintomaticos_hi95), linetype=2, alpha=0.1) +  
       ylab(paste("Casos Sintomáticos",lugar)) + 
-      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + 
+    scale_color_manual(values = c("black", "red"))  + theme(legend.position=c(0.9,0.1),legend.title=element_blank())
   )
   
   print(
-    ggplot(sum_fit, aes(fecha,hospitalizados_med)) + geom_point(size=0.1) +  
+    ggplot(sum_fit, aes(fecha,hospitalizados_med)) + geom_line(size=0.5) +  
       geom_ribbon(aes(ymin=hospitalizados_lo95, ymax=hospitalizados_hi95), linetype=2, alpha=0.1) +  
       scale_y_log10() +
       geom_vline(xintercept = today(),color="black",linetype = 3) + 
@@ -304,7 +315,7 @@ resultados_fit <- function( fitm )
 }
 
 
-plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
+plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE,siminputref=1,tbl_size=3)
 {
   fname <- paste0("Figures/escenarios", lugar)
   sum_fit <- fit %>% mutate(uti = hospitalizados_pred*.1, sintomaticos_dia =  sintomaticos_pred - lag(sintomaticos_pred),sintomaticos_dia = ifelse(sintomaticos_dia>0,sintomaticos_dia,0)) %>% 
@@ -314,35 +325,257 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
                hospitalizados_med=mean(hospitalizados_pred),uti_hi95=quantile(uti, 0.975),uti_lo95=quantile(uti, 0.025),uti_med=mean(uti),
                casos_hi95=quantile(casos_pred, 0.975),casos_lo95=quantile(casos_pred, 0.025),casos_med=mean(casos_pred),sintomaticos_med=mean(sintomaticos_pred),sintomaticos_hi95=quantile(sintomaticos_pred, 0.975),sintomaticos_lo95=quantile(sintomaticos_pred, 0.025),
                sintomaticos_dia_med=mean(sintomaticos_dia,na.rm = T),sintomaticos_dia_hi95=quantile(sintomaticos_dia, 0.975,na.rm = T),sintomaticos_dia_lo95=quantile(sintomaticos_dia, 0.025,na.rm = T)) 
-
+  
+  ref <- fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,siminputrow) %>% filter(siminputrow==siminputref) 
+  tbl <- fit %>% distinct(siminputrow,Horas_en_viaje,Horas_en_trabajo) %>% mutate(Trabajo = paste( round(Horas_en_trabajo / ref$Horas_en_trabajo,2)*100 - 100, "%"), Viaje= paste( round(Horas_en_viaje/ref$Horas_en_viaje,2)*100 - 100, "%")) %>% rename(Escenario = siminputrow) %>% select(c(1,4,5))
+  
+  require(ggrepel)
+  require(ggpmisc)
+  df <- tibble(x = 0.98, y = 0.001, tbl = list(tbl))
   print(
-    
-    ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,fallecidos_med,colour=siminputrow)) + geom_point(size=0.1) +
-      scale_color_continuous( name="Escenario") + theme(legend.position="bottom") + 
-      geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + scale_y_log10() +  
+    sum_fit %>% filter(fecha<=max(dff$fecha)+30) %>% mutate(label= ifelse(fecha==today()+10, paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot(aes(fecha,fallecidos_med,colour=factor(siminputrow))) + geom_line(size=0.5) +
+      scale_color_brewer(palette = "Paired", name="Escenario",guide=FALSE) + 
+      scale_y_continuous(labels = scales::comma, trans="log10") +
+      geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) +   
       geom_vline(xintercept = today(),color="black",linetype = 3) + 
       geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
       geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
       ylab(paste("Fallecidos",lugar)) + 
-      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+
   )
-  fname1 <- paste0(fname, "_Fallecidos_log.pdf")
+  fname1 <- paste0(fname, "_Fallecidos_log.png")
   if(save_plots)
-      ggsave(fname1, width=6,height=5,units="in",dpi=300)
+      ggsave(fname1, width=8,height=6,units="in",dpi=300)
   
+  df <- tibble(x = 0.98, y = 0.1, tbl = list(tbl))
   print(
-    
-    ggplot(sum_fit, aes(fecha,fallecidos_med,colour=siminputrow)) + geom_point(size=0.1) + 
-      scale_color_continuous( name="Escenario") + theme(legend.position="bottom") + 
+    sum_fit %>% mutate(label= ifelse(fecha==today()+30, paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,fallecidos_med,colour=factor(siminputrow))) + geom_line(size=0.5) + 
+      scale_color_brewer(palette = "Paired", name="Escenario",guide=FALSE) + 
     #geom_ribbon(aes(ymin=fallecidos_lo95, ymax=fallecidos_hi95), linetype=2, alpha=0.1) +
     geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + #scale_y_log10() +
     geom_vline(xintercept =today(),color="black",linetype = 3)  +  
     geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
     geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +  
     ylab(paste("Fallecidos",lugar)) + 
-    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+    xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+    
+    
   )
-  fname1 <- paste0(fname, "_Fallecidos.pdf")
+  fname1 <- paste0(fname, "_Fallecidos.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+  print(
+    sum_fit %>% mutate(label= ifelse(fecha==today()+30, paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,hospitalizados_med,colour=factor(siminputrow))) + geom_line(size=0.5)  + 
+      scale_color_brewer(palette = "Paired", name="Escenario", guide=FALSE) + 
+      #scale_y_log10() + 
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +   
+      ylab(paste("Hospitalizados",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+  )
+  fname1 <- paste0(fname, "_Hospitalizados.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+  print(
+    sum_fit %>% mutate(label= ifelse(fecha==today()+30, paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,uti_med,colour=factor(siminputrow))) + geom_line(size=0.5) + 
+      scale_color_brewer(palette = "Paired", name="Escenario", guide=FALSE) +
+      #scale_y_log10() +  
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +   
+      geom_hline(yintercept = camas_uti, color= "red", linetype=2) +  
+      ylab(paste("UTI",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+  )
+  fname1 <- paste0(fname, "_Uti.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+  #
+  # Chequeado
+  # https://chequeado.com/el-explicador/camas-de-terapia-intensiva-en-la-ciudad-cuantas-hay-y-que-podria-pasar-segun-las-proyecciones/
+  #
+  
+  print(
+    sum_fit %>% filter(fecha<=max(dff$fecha)+10) %>% mutate(label= ifelse(fecha==today(), paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,casos_med,colour=factor(siminputrow))) + geom_line(size=0.5) +
+      scale_color_brewer(palette = "Paired", name="Escenario", guide=FALSE) +
+      geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + 
+      scale_y_continuous(labels = scales::comma, trans="log10") +
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +   
+      ylab(paste("Casos",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+    
+  )
+  fname1 <- paste0(fname, "_Casos_log.png")
+
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+  
+  print(
+    sum_fit %>% mutate(label= ifelse(fecha==today()+30, paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,casos_med,colour=factor(siminputrow))) + geom_line(size=0.5) +
+      scale_color_brewer(palette = "Paired", name="Escenario", guide=FALSE) +
+      geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + 
+      scale_y_continuous(labels = scales::comma) +
+      #scale_y_log10() +  
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +   
+      ylab(paste("Casos",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+    
+  )
+  fname1 <- paste0(fname, "_Casos.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+  print(
+    sum_fit %>% filter(fecha<=max(dff$fecha)+10) %>% mutate(label= ifelse(fecha==today(), paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,sintomaticos_med,colour=factor(siminputrow))) + geom_line(size=0.5) +
+      scale_color_brewer(palette = "Paired", name="Escenario",guide=FALSE) + 
+      scale_y_continuous(labels = scales::comma) +
+      geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + scale_y_log10() +  
+      geom_vline(xintercept = today(),color="black",linetype = 3) + 
+      geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
+      ylab(paste("Casos Sintomáticos",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+  )
+  fname1 <- paste0(fname, "_Sintomaticos_log.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+
+  print(
+    sum_fit %>% mutate(label= ifelse(fecha==today()+30, paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,sintomaticos_med,colour=factor(siminputrow))) + geom_line(size=0.5) + 
+      geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + 
+      scale_color_brewer(palette = "Paired", name="Escenario", guide=FALSE) + 
+      scale_y_continuous(labels = scales::comma) +
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
+      ylab(paste("Casos Sintomáticos",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+        geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+        geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE) 
+  )
+  fname1 <- paste0(fname, "_Sintomaticos.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+  print(
+    sum_fit %>% filter(fecha<=max(dff$fecha)+10) %>% mutate(label= ifelse(fecha==today(), paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot(aes(fecha,sintomaticos_dia_med,colour=factor(siminputrow))) + geom_line(size=0.5) + 
+      geom_point(data=dff,aes(fecha, casos_dia),color='red',size=.5) + 
+      scale_color_brewer(palette = "Paired", name="Escenario", guide=FALSE)  +
+      scale_y_continuous(labels = scales::comma, trans="log10") +
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
+      ylab(paste("Casos Sintomáticos diarios",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+  )
+  fname1 <- paste0(fname, "_Sintomaticos_dia_log.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+  print(
+    sum_fit %>% mutate(label= ifelse(fecha==today()+30, paste("Escenario", siminputrow),NA_character_)) %>%
+    ggplot( aes(fecha,sintomaticos_dia_med,colour=factor(siminputrow))) + geom_line(size=0.5) + 
+      geom_point(data=dff,aes(fecha, casos_dia),color='red',size=.5) + 
+      scale_color_brewer(palette = "Paired", name="Escenario", guide=FALSE) +
+      #scale_y_log10() +  
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
+      ylab(paste("Casos Sintomáticos diarios",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") +
+      geom_table_npc(data = df,aes(npcx=x,npcy=y,label=tbl),size=tbl_size) + 
+      geom_label_repel(aes(label = label),nudge_x = 1,na.rm = TRUE)
+  )
+  fname1 <- paste0(fname, "_Sintomaticos_dia.png")
+  
+  if(save_plots)
+    ggsave(fname1, width=8,height=6,units="in",dpi=300)
+  
+}
+
+
+plot_escenarios_comp <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
+{
+  fname <- paste0("Figures/comp", lugar)
+  sum_fit <- fit %>% mutate(uti = prop_hospitalizados*.1, sintomaticos_dia =  prop_casos_sintomaticos - lag(prop_casos_sintomaticos),sintomaticos_dia = ifelse(sintomaticos_dia>0,sintomaticos_dia,0)) %>% 
+    group_by(lugar,siminputrow,fecha) %>% 
+    summarise( fallecidos_hi95=quantile(prop_fallecidos, 0.975),fallecidos_lo95=quantile(prop_fallecidos, 0.025),fallecidos_med=mean(prop_fallecidos),
+               fallecidos_sd=sd(prop_fallecidos),hospitalizados_hi95=quantile(prop_hospitalizados, 0.975),hospitalizados_lo95=quantile(prop_hospitalizados, 0.025),
+               hospitalizados_med=mean(prop_hospitalizados),uti_hi95=quantile(uti, 0.975),uti_lo95=quantile(uti, 0.025),uti_med=mean(uti),
+               casos_hi95=quantile(prop_casos, 0.975),casos_lo95=quantile(prop_casos, 0.025),casos_med=mean(prop_casos),sintomaticos_med=mean(prop_casos_sintomaticos),sintomaticos_hi95=quantile(prop_casos_sintomaticos, 0.975),sintomaticos_lo95=quantile(prop_casos_sintomaticos, 0.025),
+               sintomaticos_dia_med=mean(sintomaticos_dia,na.rm = T),sintomaticos_dia_hi95=quantile(sintomaticos_dia, 0.975,na.rm = T),sintomaticos_dia_lo95=quantile(sintomaticos_dia, 0.025,na.rm = T)) 
+  
+  print(
+    
+    ggplot(sum_fit %>% filter(fecha<=max(dff$fecha)+30), aes(fecha,fallecidos_med,colour=siminputrow)) + geom_point(size=0.1) +
+      scale_color_continuous( name="Escenario") + theme(legend.position="bottom") + 
+      scale_y_log10() +  
+      geom_vline(xintercept = today(),color="black",linetype = 3) + 
+      geom_vline(data= fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data = fases, mapping = aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +
+      ylab(paste("Fallecidos",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS") + facet_wrap(~lugar)
+  )
+  fname1 <- paste0(fname, "_Fallecidos_log.png")
+  if(save_plots)
+    ggsave(fname1, width=6,height=5,units="in",dpi=300)
+  
+  print(
+    
+    ggplot(sum_fit, aes(fecha,fallecidos_med,colour=siminputrow)) + geom_point(size=0.1) + 
+      scale_color_continuous( name="Escenario") + theme(legend.position="bottom") + 
+      #geom_ribbon(aes(ymin=fallecidos_lo95, ymax=fallecidos_hi95), linetype=2, alpha=0.1) +
+      geom_point(data=dff,aes(fecha,fallecidos),color='red',size=.5) + #scale_y_log10() +
+      geom_vline(xintercept =today(),color="black",linetype = 3)  +  
+      geom_vline(data=fases, aes(xintercept = fecha), col = "red", lty = 3)  + 
+      geom_text(data= fases, mapping=aes(label = nombre, x=fecha,y = 0), angle = 60, hjust = 0,size=3,col="black") +  
+      ylab(paste("Fallecidos",lugar)) + 
+      xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
+  )
+  fname1 <- paste0(fname, "_Fallecidos.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
@@ -357,7 +590,7 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Hospitalizados",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Hospitalizados.pdf")
+  fname1 <- paste0(fname, "_Hospitalizados.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
@@ -373,7 +606,7 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("UTI",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Uti.pdf")
+  fname1 <- paste0(fname, "_Uti.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
@@ -394,8 +627,8 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Casos",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Casos_log.pdf")
-
+  fname1 <- paste0(fname, "_Casos_log.png")
+  
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
   
@@ -411,7 +644,7 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Casos",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Casos.pdf")
+  fname1 <- paste0(fname, "_Casos.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
@@ -426,12 +659,12 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Casos Sintomáticos",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Sintomaticos_log.pdf")
+  fname1 <- paste0(fname, "_Sintomaticos_log.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
   
-
+  
   print(
     ggplot(sum_fit, aes(fecha,sintomaticos_med,colour=siminputrow)) + geom_point(size=0.1) + 
       geom_point(data=dff,aes(fecha,casos),color='red',size=.5) + 
@@ -443,7 +676,7 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Casos Sintomáticos",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Sintomaticos.pdf")
+  fname1 <- paste0(fname, "_Sintomaticos.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
@@ -459,7 +692,7 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Casos Sintomáticos diarios",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Sintomaticos_dia_log.pdf")
+  fname1 <- paste0(fname, "_Sintomaticos_dia_log.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)
@@ -475,7 +708,7 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE)
       ylab(paste("Casos Sintomáticos diarios",lugar)) + 
       xlab("") +  ggtitle("Modelo AriadnaNL - Grupo covid19UNGS")
   )
-  fname1 <- paste0(fname, "_Sintomaticos_dia.pdf")
+  fname1 <- paste0(fname, "_Sintomaticos_dia.png")
   
   if(save_plots)
     ggsave(fname1, width=6,height=5,units="in",dpi=300)

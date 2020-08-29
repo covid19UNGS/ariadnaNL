@@ -545,7 +545,7 @@ fit <- fit$fit %>%  mutate(fallecidos_dia = fallecidos_pred -lag(fallecidos_pred
 fit1 <- fit  %>% filter(siminputrow == 1 ) 
 fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
 
-fitm <- plot_ajustes_CI(fit1,dff, "PBA",3500)
+fitm <- plot_ajustes_CI(fit1,dff, "Provincia de Buenos Aires",3500)
 result <- resultados_fit( fitm) %>% mutate(lugar="PBA",periodo_fit="121-139")
 
 #
@@ -557,7 +557,7 @@ fec_min <-ymd("2020-06-03")
 fit1 <- fit  %>% filter(siminputrow == 2 ) 
 fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
 
-fitm <- plot_ajustes_CI(fit1,dff, "CABA",3500)
+fitm <- plot_ajustes_CI(fit1,dff, "PBA",3500)
 result <- bind_rows(result,resultados_fit( fitm) %>% mutate(lugar="PBA",periodo_fit="93-121"))
 
 #
@@ -570,7 +570,7 @@ fec_min <-ymd("2020-05-04")
 fit1 <- fit  %>% filter(siminputrow == 3 ) 
 fit1 %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
 
-fitm <- plot_ajustes_CI(fit1,dff, "CABA")
+fitm <- plot_ajustes_CI(fit1,dff, "PBA",3500)
 result <- bind_rows(result,resultados_fit( fitm) %>% mutate(lugar="CABA",periodo_fit="63-93"))
 
 
@@ -588,8 +588,45 @@ fitm <- plot_ajustes_CI(fit1,dff, "PBA",3500)
 result <- bind_rows(result,resultados_fit( fitm) %>% mutate(lugar="CABA",periodo_fit="33-63"))
 
 knitr::kable(result %>% select(lugar, periodo_fit, everything()) , digits = 0)
-plot_escenarios_CI(fit,dff, "PBA",3500,TRUE)
+plot_escenarios_CI(fit,dff, "Provincia de Buenos Aires",3500,TRUE)
 
 knitr::kable(fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados))
+
+```
+
+## Comparacion de CABA vs PBA  con escenarios
+
+
+```{r fitted_sims, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+
+list.files("Simulations")
+
+res <- read_netlogo_simul("Simulations/world201_Beta37_viaje1_3_trabaj2_75_pfhosp12_distinct.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados, 
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion, 
+                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion, 
+                                                prop_hospitalizados = nro_hospitalizados/poblacion,
+                                                lugar= "PBA")
+
+res <- bind_rows( res, read_netlogo_simul("Simulations/world201_Beta41_viaje1_2_trabaj4_75_pfhosp09_distinct.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                  casos = nro_fallecidos+ nro_recuperados, 
+                                                  fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion, 
+                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion, 
+                                                prop_hospitalizados = nro_hospitalizados/poblacion,
+                                                lugar="CABA"))
+
+df <- dff %>% filter(fecha <=  "2020-06-23")
+
+fit <- fit_ariadnaNL_simulations(df,33,50,res,pob_CABA,0,10) 
+
+fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow,lugar)
+
+plot_escenarios_comp(fit$fit,dff, "PBA",3500,TRUE)                  
+
 
 ```

@@ -1064,8 +1064,8 @@ nl@experiment <- experiment(expname="world201_Beta41_viaje1_2_trabaj4_75_pfhosp0
                             runtime=365,
                             metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos","nro-casos-sintomaticos" ),
                             variables = list("beta" = list(values=c(0.41,0.41,0.41,0.41)),
-                                             "Horas-en-viaje" = list(values=c(2.4,2,2.74,1)),
-                                             "Horas-en-trabajo"=list(values=c(7.5,5,2.11,2))
+                                             "Horas-en-viaje" = list(values=c(2.74,2.74,2.74,1)),
+                                             "Horas-en-trabajo"=list(values=c(7.5,5,2.11,2.11))
                                              ),
                             constants = list("world-width" = 201,
                                              "world-height" = 201,

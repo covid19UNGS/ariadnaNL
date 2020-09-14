@@ -1055,7 +1055,7 @@ write_simoutput(nl)
 
 ```{r gen_fited_sim41, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=TRUE}
 
-nl@experiment <- experiment(expname="world201_Beta41_viaje1_2_trabaj4_75_pfhosp09",
+nl@experiment <- experiment(expname="world201_Beta41_viaje1_2_trabaj2_75_pfhosp09",
                             outpath=outpath,
                             repetition=1,
                             tickmetrics="true",
@@ -1063,9 +1063,9 @@ nl@experiment <- experiment(expname="world201_Beta41_viaje1_2_trabaj4_75_pfhosp0
                             idgo="go",
                             runtime=365,
                             metrics=c("count personas", "nro-hospitalizados", "nro-recuperados", "nro-fallecidos","nro-casos-sintomaticos" ),
-                            variables = list("beta" = list(values=c(0.41,0.41,0.41,0.41)),
-                                             "Horas-en-viaje" = list(values=c(2.74,2.74,2.74,1)),
-                                             "Horas-en-trabajo"=list(values=c(7.5,5,2.11,2.11))
+                            variables = list("beta" = list(values=c(0.41,0.41,0.41,0.41,0.41)),
+                                             "Horas-en-viaje" = list(values=c(2   ,2,2  ,1,1)),
+                                             "Horas-en-trabajo"=list(values=c(2.11,5,7.5,5,7.5))
                                              ),
                             constants = list("world-width" = 201,
                                              "world-height" = 201,
@@ -1098,7 +1098,7 @@ require(future)
 plan(multisession)
 require(tictoc)
 tic()
-results <- run_nl_all(nl,split = 4)
+results <- run_nl_all(nl,split = 5)
 toc()
 plan(sequential)
 names(results)
@@ -1233,6 +1233,7 @@ res <- read_netlogo_simul("Simulations/world201_Beta41_viaje1_2_trabaj4_75_pfhos
                                                 fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
                                                 prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion, 
                                                 prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion)
+
 
 # Para que no se corran las fechas de ajuste que son relativas al ultimo dia de los datos
 #

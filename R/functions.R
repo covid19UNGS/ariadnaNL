@@ -44,8 +44,8 @@ fit_ariadnaNL_simulations <- function(df,dias_inicio,dias_fin,sims,pob_tot,dias_
   #
   # fit <- res_fit %>% ungroup() %>% top_n(-res_num,ssq)  %>% select(-random_seed) %>% inner_join(sims) %>% mutate(fecha = min_fecha + step-dias_lag,casos_pred= prop_casos*pob_tot, fallecidos_pred=prop_fallecidos*pob_tot)
   
-  fit <- res_fit %>% ungroup() %>% top_n(-res_num,ssq) %>% inner_join(sims) %>% mutate(fecha = min_fecha + step-dias_lag,casos_pred= prop_casos*pob_tot, fallecidos_pred=prop_fallecidos*pob_tot, fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_CABA, 
-              sintomaticos_pred=prop_casos_sintomaticos*pob_CABA)
+  fit <- res_fit %>% ungroup() %>% top_n(-res_num,ssq) %>% inner_join(sims) %>% mutate(fecha = min_fecha + step-dias_lag,casos_pred= prop_casos*pob_tot, fallecidos_pred=prop_fallecidos*pob_tot, fallecidos_dia = fallecidos_pred -lag(fallecidos_pred), hospitalizados_pred=nro_hospitalizados/poblacion*pob_tot, 
+              sintomaticos_pred=prop_casos_sintomaticos*pob_tot)
   
   return(list(fit=fit, fec_lim=fec_lim,fec_min=min_fecha+dias_inicio))
 }
@@ -351,7 +351,7 @@ plot_escenarios_CI <- function(fit,dff,lugar,camas_uti=1027,save_plots=FALSE,sim
   if(save_plots)
       ggsave(fname1, width=8,height=6,units="in",dpi=300)
   
-  df <- tibble(x = 0.98, y = 0.1, tbl = list(tbl))
+  df <- tibble(x = 0.02, y = 0.98, tbl = list(tbl))
   print(
     sum_fit %>% mutate(label= ifelse(fecha==today()+30, paste("Escenario", siminputrow),NA_character_)) %>%
     ggplot( aes(fecha,fallecidos_med,colour=factor(siminputrow))) + geom_line(size=0.5) + 

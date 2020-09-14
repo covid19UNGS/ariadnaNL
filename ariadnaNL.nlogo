@@ -463,7 +463,7 @@ beta
 beta
 0
 1
-0.41
+0.37
 .01
 1
 NIL
@@ -540,7 +540,7 @@ Horas-en-trabajo
 Horas-en-trabajo
 1
 10
-7.6
+7.5
 .1
 1
 NIL
@@ -648,7 +648,7 @@ periodo-asintomatico
 periodo-asintomatico
 1
 10
-7.0
+6.9
 .1
 1
 NIL
@@ -678,7 +678,7 @@ Proporcion-fallecimiento-hospitalizados
 Proporcion-fallecimiento-hospitalizados
 0
 1
-0.06
+0.12
 .01
 1
 NIL
@@ -719,7 +719,7 @@ Horas-en-viaje
 Horas-en-viaje
 0
 4
-1.6
+3.0
 .1
 1
 NIL
@@ -815,7 +815,7 @@ capacidad-de-camas
 capacidad-de-camas
 0
 3000
-3000.0
+225.0
 1
 1
 NIL
@@ -830,7 +830,7 @@ proporcion-fallecimiento-saturada
 proporcion-fallecimiento-saturada
 0
 1
-0.15
+0.4
 0.01
 1
 NIL
@@ -856,7 +856,7 @@ proporcion-hospitalizados
 proporcion-hospitalizados
 0
 1
-0.16
+0.1
 .01
 1
 NIL
@@ -871,7 +871,7 @@ fallecido-sin-hospitalizacion
 fallecido-sin-hospitalizacion
 0
 1
-0.005
+0.006
 0.001
 1
 NIL

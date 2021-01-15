@@ -14,6 +14,7 @@ patches-own [ lugar             ;; 1= casa 2=trabajo 3=Hospital
 
 ]
 
+;make changes #ignore
 globals [ total-patches
           cant-trabajos
           cant-casas

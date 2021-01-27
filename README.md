@@ -3,7 +3,7 @@
 
 ## El hilo para salir de este laberinto (COVID19 - 2020)
 
-## Descripción del modelo
+## Descripción del modelo (model description)
 
   - Un modelo de agentes para covid19 con redes bipartitas usando
     NetLogo

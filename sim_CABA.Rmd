@@ -1214,20 +1214,6 @@ plot_escenarios_CI(fit,dff, "Ajuste CABA",1027,TRUE)
 ```{r fitted_sims0-33, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
 list.files("Simulations")
-res <- read_netlogo_simul("Simulations/world201_Beta41_viaje1_2_trabaj4_75_pfhosp58_distinct.csv",skip = 0) %>% 
-                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
-                                                casos = nro_fallecidos+ nro_recuperados, 
-                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
-                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion, 
-                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion)
-
-res <- read_netlogo_simul("Simulations/world201_Beta405_viaje1_2_trabaj51_78_pfhosp58_distinct.csv",skip = 0) %>% 
-                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
-                                                casos = nro_fallecidos+ nro_recuperados, 
-                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
-                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion, 
-                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion)
-
 
 res <- read_netlogo_simul("Simulations/world201_Beta41_viaje1_2_trabaj4_75_pfhosp09_distinct.csv",skip = 0) %>% 
                                                 mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
@@ -1236,12 +1222,20 @@ res <- read_netlogo_simul("Simulations/world201_Beta41_viaje1_2_trabaj4_75_pfhos
                                                 prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion, 
                                                 prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion)
 
+res <- bind_rows(res, read_netlogo_simul("Simulations/world201_Beta41_viaje1_2_trabaj2_75_pfhosp09_distinct.csv",skip = 0) %>% 
+                                                mutate(prop_fallecidos = nro_fallecidos / max(count_personas), 
+                                                casos = nro_fallecidos+ nro_recuperados, 
+                                                fatalidad = nro_fallecidos / casos * 100, poblacion=max(count_personas),
+                                                prop_casos=casos/poblacion,prop_camas=capacidad_de_camas/poblacion, 
+                                                prop_casos_sintomaticos = nro_casos_sintomaticos/poblacion,
+                                                siminputrow = max(res$siminputrow) +  siminputrow))
+
 
 # Para que no se corran las fechas de ajuste que son relativas al ultimo dia de los datos
 #
 df <- dff %>% filter(fecha <=  "2020-06-23")
 
-fit <- fit_ariadnaNL_simulations(df,33,50,res,pob_CABA,0,7) 
+fit <- fit_ariadnaNL_simulations(df,33,50,res,pob_CABA,0,10) 
 
 fit$fit %>% distinct(beta,Horas_en_viaje,Horas_en_trabajo,proporcion_hospitalizados,Proporcion_fallecimiento_hospitalizados,siminputrow)
 

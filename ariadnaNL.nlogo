@@ -38,6 +38,10 @@ globals [ total-patches
 
           tasa-de-ataque       ; por casa calculada al final de la epidemia
 
+          prop-personas1
+          prop-personas2
+          prop-personas3
+          prop-personas4
 ]
 
 extensions [profiler table]
@@ -81,7 +85,7 @@ to setup-ini
   ;; Poner las personas en las casas
   ;;
   ask patches with [lugar = 1] [
-      let personas1-por-casa (1 + random max-personas-por-casa)
+      let personas1-por-casa (1 + random max-personas-por-casa * prop-personas1) ;; 0-17 anos
       sprout-personas1 personas1-por-casa [
         set size .5
         set donde 1
@@ -90,7 +94,7 @@ to setup-ini
         ;set-color-persona
         fd 0.2
       ]
-      let personas2-por-casa ((1 + random max-personas-por-casa) * 0.273200433) ;; 18-34 anos
+      let personas2-por-casa ((1 + random max-personas-por-casa) * prop-personas2) ;; 18-34 anos
       sprout-personas2 personas2-por-casa [
         set size .5
         set donde 1
@@ -99,7 +103,7 @@ to setup-ini
         ;set-color-persona
         fd 0.2
       ]
-      let personas3-por-casa ((1 + random max-personas-por-casa) * 0.276627775) ;; 35-64 anos
+      let personas3-por-casa ((1 + random max-personas-por-casa) * prop-personas3) ;; 35-64 anos
       sprout-personas3 personas3-por-casa [
         set size .5
         set donde 1
@@ -108,7 +112,7 @@ to setup-ini
         ;set-color-persona
         fd 0.2
       ]
-      let personas4-por-casa ((1 + random max-personas-por-casa) * 0.142728128) ;; 65+ anos
+      let personas4-por-casa ((1 + random max-personas-por-casa) * prop-personas4) ;; 65+ anos
       sprout-personas4 personas4-por-casa [
         set size .5
         set donde 1
@@ -129,6 +133,32 @@ to setup-ini
 
   set horas-de-dormir 8
   set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo - horas-en-viaje    ;; Assume children go to school for the same #hrs as adults go to work
+
+;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
+  set prop-personas1 0.19550259   ;; CABA
+  set prop-personas2 0.276438152  ;; CABA
+  set prop-personas3 0.364029423  ;; CABA
+  set prop-personas4 0.164029838  ;; CABA
+ 
+  ;set prop-personas1 0.298076286  ;; Buenos Aires
+  ;set prop-personas2 0.269693078  ;; Buenos Aires
+  ;set prop-personas3 0.325270827  ;; Buenos Aires
+  ;set prop-personas4 0.106959809  ;; Buenos Aires
+
+  ;set prop-personas1 0.205723239  ;; NYC
+  ;set prop-personas2 0.261033318  ;; NYC
+  ;set prop-personas3 0.379564407  ;; NYC
+  ;set prop-personas4 0.153679036  ;; NYC
+  
+  ;set prop-personas1 0.10         ;; Japan-like
+  ;set prop-personas2 0.25         ;; Japan-like
+  ;set prop-personas3 0.35         ;; Japan-like
+  ;set prop-personas4 0.30         ;; Japan-like
+  
+  ;set prop-personas1 0.40         ;; India-like
+  ;set prop-personas2 0.25         ;; India-like
+  ;set prop-personas3 0.25         ;; India-like
+  ;set prop-personas4 0.10         ;; India-like
 
 end
 

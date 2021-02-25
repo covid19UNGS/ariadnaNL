@@ -15,7 +15,6 @@ patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
               nro-personas
               mu_ie             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
               fallecidos        ;; Fallecidos de esa casa
-
 ]
 
 globals [ total-patches

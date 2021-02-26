@@ -84,7 +84,7 @@ to setup-ini
   ;; Poner las personas en las casas
   ;;
   ask patches with [lugar = 1] [
-      let personas1-por-casa (1 + random max-personas-por-casa * prop-personas1) ;; 0-17 anos
+      let personas1-por-casa ((1 + random max-personas-por-casa) * prop-personas1) ;; 0-17 anos
       sprout-personas1 personas1-por-casa [
         set size .5
         set donde 1
@@ -490,6 +490,8 @@ to infeccion-viaje [prop-horas]   ;; includes only estados 3 or 4 b/c once they'
     ]
   ]
 end
+
+
 
 
 to set-color-persona

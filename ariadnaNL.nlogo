@@ -1,26 +1,23 @@
-breed [personas1 persona1]        ; living personas 0-17
-breed [personas2 persona2]        ; living personas 18-34
-breed [personas3 persona3]        ; living personas 35-64
-breed [personas4 persona4]        ; living personas 65+
+breed [personas persona]        ; living personas
 
-turtles-own [ estado            ; 1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
+personas-own [ estado           ; 1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
                                 ; 9 infectado-leve
-               donde            ; 1=casa, 2=trabajo, 3=escuela, 4=hospital
+               donde            ; 1 =casa  2=trabajo 3= hospital
 
                mi-casa
                mi-trabajo
-               mi-escuela
              ]
-patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
+patches-own [ lugar             ;; 1= casa 2=trabajo 3=Hospital
               nro-personas
-              mu_ie             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
+              mu_ie             ;; de infectados a latentes del parche
               fallecidos        ;; Fallecidos de esa casa
+
 ]
 
+;make changes #ignore
 globals [ total-patches
           cant-trabajos
           cant-casas
-          cant-escuela
           hospital             ; patch hospital
           horas-en-casa        ; horas en el trabajo
           horas-de-dormir
@@ -37,10 +34,6 @@ globals [ total-patches
 
           tasa-de-ataque       ; por casa calculada al final de la epidemia
 
-          prop-personas1
-          prop-personas2
-          prop-personas3
-          prop-personas4
 ]
 
 extensions [profiler table]
@@ -48,18 +41,14 @@ extensions [profiler table]
 to setup-ini
   clear-all
   set total-patches count patches
-  set-default-shape personas1 "triangle"
-  set-default-shape personas2 "square"
-  set-default-shape personas3 "circle"
-  set-default-shape personas4 "wheel"
+  set-default-shape personas "circle"
   ;;
   ;; Generar casas trabajos como parches
   ;;
-  ;; 2/3 de casas 1/3 de trabajos 1 hospital 3 escuela
+  ;; 2/3 de casas 1/3 de trabajos 1 hospital
   ;;
   set cant-trabajos total-patches / 3
-  set cant-escuela 3
-  set cant-casas total-patches - cant-trabajos - cant-escuela - 1
+  set cant-casas total-patches - cant-trabajos - 1
 
   ;; show (word cant-trabajos " " cant-casas)
 
@@ -71,12 +60,8 @@ to setup-ini
     set lugar 2
     set pcolor blue
   ]
-  ask n-of cant-escuela patches with [lugar != 1 or lugar != 2] [
-    set lugar 3
-    set pcolor green
-  ]
   ask patches with [lugar = 0] [
-    set lugar 4
+    set lugar 3
     set pcolor lime
     set hospital self
   ]
@@ -84,42 +69,17 @@ to setup-ini
   ;; Poner las personas en las casas
   ;;
   ask patches with [lugar = 1] [
-      let personas1-por-casa (1 + random max-personas-por-casa * prop-personas1) ;; 0-17 anos
-      sprout-personas1 personas1-por-casa [
+      let personas-por-casa (1 + random max-personas-por-casa)
+      sprout-personas personas-por-casa [
         set size .5
         set donde 1
         set estado 1 ;; suceptible
         set mi-casa patch-here
         ;set-color-persona
         fd 0.2
+
       ]
-      let personas2-por-casa ((1 + random max-personas-por-casa) * prop-personas2) ;; 18-34 anos
-      sprout-personas2 personas2-por-casa [
-        set size .5
-        set donde 1
-        set estado 1 ;; suceptible
-        set mi-casa patch-here
-        ;set-color-persona
-        fd 0.2
-      ]
-      let personas3-por-casa ((1 + random max-personas-por-casa) * prop-personas3) ;; 35-64 anos
-      sprout-personas3 personas3-por-casa [
-        set size .5
-        set donde 1
-        set estado 1 ;; suceptible
-        set mi-casa patch-here
-        ;set-color-persona
-        fd 0.2
-      ]
-      let personas4-por-casa ((1 + random max-personas-por-casa) * prop-personas4) ;; 65+ anos
-      sprout-personas4 personas4-por-casa [
-        set size .5
-        set donde 1
-        set estado 1 ;; suceptible
-        set mi-casa patch-here
-        ;set-color-persona
-        fd 0.2
-      ]
+
   ]
   set gamma    1 - exp ( - 1 / periodo-latencia )
   set lambda_p 1 - exp ( - 1 / periodo-presintomatico )
@@ -131,33 +91,7 @@ to setup-ini
   set rho_r    1 - exp ( - 1 / periodo-hospitalizacion-recuperado )
 
   set horas-de-dormir 8
-  set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo - horas-en-viaje    ;; Assume children go to school for the same #hrs as adults go to work
-
-;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
-  set prop-personas1 0.19550259   ;; CABA
-  set prop-personas2 0.276438152  ;; CABA
-  set prop-personas3 0.364029423  ;; CABA
-  set prop-personas4 0.164029838  ;; CABA
- 
-  ;set prop-personas1 0.298076286  ;; Buenos Aires
-  ;set prop-personas2 0.269693078  ;; Buenos Aires
-  ;set prop-personas3 0.325270827  ;; Buenos Aires
-  ;set prop-personas4 0.106959809  ;; Buenos Aires
-
-  ;set prop-personas1 0.205723239  ;; NYC
-  ;set prop-personas2 0.261033318  ;; NYC
-  ;set prop-personas3 0.379564407  ;; NYC
-  ;set prop-personas4 0.153679036  ;; NYC
-  
-  ;set prop-personas1 0.10         ;; Japan-like
-  ;set prop-personas2 0.25         ;; Japan-like
-  ;set prop-personas3 0.35         ;; Japan-like
-  ;set prop-personas4 0.30         ;; Japan-like
-  
-  ;set prop-personas1 0.40         ;; India-like
-  ;set prop-personas2 0.25         ;; India-like
-  ;set prop-personas3 0.25         ;; India-like
-  ;set prop-personas4 0.10         ;; India-like
+  set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo - horas-en-viaje
 
 end
 
@@ -169,7 +103,7 @@ to setup
 
   ;; inicializa con Latentes
   ;;
-  ask n-of infectados-iniciales turtles
+  ask n-of infectados-iniciales personas
   [
     set estado 2
     ;set-color-persona
@@ -193,16 +127,13 @@ to go
 
   if ticks = 365 ;; simulation runs for 365 days
   [
-    set tasa-de-ataque mean [ ( count turtles-here with [ estado > 1 ] + fallecidos ) / nro-personas ] of patches with [lugar = 1 and nro-personas > 0]
+    set tasa-de-ataque mean [ ( count personas-here with [ estado > 1 ] + fallecidos ) / nro-personas ] of patches with [lugar = 1 and nro-personas > 0]
     stop
   ]
   ;;
   ;; Primero el movimiento de casa a trabajo al principio del dia
   ;;
-  ask personas2 [
-    ir-al-trabajo
-  ]
-  ask personas3 [
+  ask personas [
     ir-al-trabajo
   ]
   ;;
@@ -215,11 +146,7 @@ to go
   ;;
   infeccion-local prop-horas-en-trabajo
 
-  ask personas1 [
-  ir-a-la-escuela
-  ]
-  
-  ask turtles [
+  ask personas [
     volver-a-casa
  ]
  ;;
@@ -241,7 +168,7 @@ to ir-al-trabajo
       set donde 2
       move-to mi-trabajo
       set nro-personas nro-personas + 1
-      ;;show  word mi-trabajo nro-personas    ;; if we expand nro-personas(1-4), how do we set this variable? Do we need to create separate "ir-al-trabajo" commands for personas2 (young adults) and personas3 (older adults)?
+      ;;show  word mi-trabajo nro-personas
     ]
     [
       (ifelse donde = 1 [
@@ -252,33 +179,6 @@ to ir-al-trabajo
         ]
         donde = 2 [
           show (word "Nadie se queda a dormir en el trabajo! Estado " estado)
-        ]
-       )
-    ]
-  ]
-end
-
-to ir-a-la-escuela
-    if estado < 5 or estado = 8
-    [  ; 1 susceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado, 9 infectado leve
-    ;;
-    ;; La primera vez asigna el lugar de escuela
-    ;;
-    ifelse mi-escuela = 0 [
-      set mi-escuela one-of patches with  [lugar = 3 and nro-personas] ;; for now, we do not set a max-personas-por-escuela
-      set donde 3
-      move-to mi-escuela
-      set nro-personas nro-personas + 1
-    ]
-    [
-      (ifelse donde = 1 [
-        move-to mi-escuela
-        ;;lt 10
-        ;;fd 0.2
-        set donde 3
-        ]
-        donde = 3 [
-          show (word "Nadie se queda a dormir en la escuela! Estado " estado)
         ]
        )
     ]
@@ -331,21 +231,21 @@ end
 
 ;;1 suceptible, 2 latente, 3 presintomatico , 4 asintomatico, 5 sintomatico, 6 hospitalizado,  7 fallecido, 8 recuperado
 ;;
-to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1) so you need to transition some to exposed (estado = 2)
+to infeccion-local [prop-horas]
 
   ask patches [
-    set nro-personas count turtles-here
+    set nro-personas count personas-here
     if nro-personas > 0
     [
-      let nro-infectores count turtles-here with [estado > 2 and estado < 6]
+      let nro-infectores count personas-here with [estado > 2 and estado < 6]
       set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
       ;;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
-  ask turtles [
-    if estado = 1 [ ;; Susceptible
+  ask personas [
+    if estado = 1 [ ;; Suceptible
 
-      if random-float 1 < mu_ie [     ;; if random reported number (b/w 0-1) is less than the Pr of contacting another and getting infected (mu_ie), then...
+      if random-float 1 < mu_ie [
 
         set estado 2
         ;;show (word "Clocal 1 N: " nro-personas " mu_ie: " mu_ie )
@@ -360,15 +260,15 @@ end
 to infeccion-local-estado [prop-horas]
 
   ask patches [
-    set nro-personas count turtles-here
+    set nro-personas count personas-here
     if nro-personas > 0
     [
-      let nro-infectores count turtles-here with [estado > 2 and estado < 6]
+      let nro-infectores count personas-here with [estado > 2 and estado < 6]
       set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
       ;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
-  ask turtles [
+  ask personas [
     (ifelse estado = 1 [ ;; Suceptible
 
       if random-float 1 < mu_ie [
@@ -472,14 +372,14 @@ to infeccion-local-estado [prop-horas]
 
 end
 
-to infeccion-viaje [prop-horas]   ;; includes only estados 3 or 4 b/c once they're symptomatic (5), they're bound to be home or in the hospital (and not commuting)
+to infeccion-viaje [prop-horas]
 
-  let nro-total-infectores count turtles with [estado = 3 or estado = 4]
-  let nro-total-personas count turtles
+  let nro-total-infectores count personas with [estado = 3 or estado = 4]
+  let nro-total-personas count personas
   let mu_vi  1 - exp( - beta * nro-total-infectores / nro-total-personas * prop-horas)
   ;print (word "N: " nro-total-personas "I " nro-total-infectores "\n mu_vi: " mu_vi)
-  ask turtles [
-    if estado = 1 [ ;; Susceptible
+  ask personas [
+    if estado = 1 [ ;; Suceptible
 
       if random-float 1 < mu_vi [
 

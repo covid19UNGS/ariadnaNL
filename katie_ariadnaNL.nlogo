@@ -73,13 +73,42 @@ to setup-ini
   ]
   ask n-of cant-escuela patches with [lugar != 1 or lugar != 2] [
     set lugar 3
-    set pcolor green
+    set pcolor orange
   ]
-  ask patches with [lugar = 0] [
+  ask patches with [lugar = 0] [      ;; more than 1 hospital is being created - not sure why
     set lugar 4
     set pcolor lime
     set hospital self
   ]
+  
+  ;;
+  ;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
+  ;;
+  set prop-personas1 0.19550259   ;; CABA
+  set prop-personas2 0.276438152  ;; CABA
+  set prop-personas3 0.364029423  ;; CABA
+  set prop-personas4 0.164029838  ;; CABA
+ 
+  ;set prop-personas1 0.298076286  ;; Buenos Aires
+  ;set prop-personas2 0.269693078  ;; Buenos Aires
+  ;set prop-personas3 0.325270827  ;; Buenos Aires
+  ;set prop-personas4 0.106959809  ;; Buenos Aires
+
+  ;set prop-personas1 0.205723239  ;; NYC
+  ;set prop-personas2 0.261033318  ;; NYC
+  ;set prop-personas3 0.379564407  ;; NYC
+  ;set prop-personas4 0.153679036  ;; NYC
+  
+  ;set prop-personas1 0.10         ;; Japan-like
+  ;set prop-personas2 0.25         ;; Japan-like
+  ;set prop-personas3 0.35         ;; Japan-like
+  ;set prop-personas4 0.30         ;; Japan-like
+  
+  ;set prop-personas1 0.40         ;; India-like
+  ;set prop-personas2 0.25         ;; India-like
+  ;set prop-personas3 0.25         ;; India-like
+  ;set prop-personas4 0.10         ;; India-like
+  
   ;;
   ;; Poner las personas en las casas
   ;;
@@ -132,32 +161,6 @@ to setup-ini
 
   set horas-de-dormir 8
   set horas-en-casa 24 - horas-de-dormir - horas-en-trabajo - horas-en-viaje    ;; Assume children go to school for the same #hrs as adults go to work
-
-;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
-  set prop-personas1 0.19550259   ;; CABA
-  set prop-personas2 0.276438152  ;; CABA
-  set prop-personas3 0.364029423  ;; CABA
-  set prop-personas4 0.164029838  ;; CABA
- 
-  ;set prop-personas1 0.298076286  ;; Buenos Aires
-  ;set prop-personas2 0.269693078  ;; Buenos Aires
-  ;set prop-personas3 0.325270827  ;; Buenos Aires
-  ;set prop-personas4 0.106959809  ;; Buenos Aires
-
-  ;set prop-personas1 0.205723239  ;; NYC
-  ;set prop-personas2 0.261033318  ;; NYC
-  ;set prop-personas3 0.379564407  ;; NYC
-  ;set prop-personas4 0.153679036  ;; NYC
-  
-  ;set prop-personas1 0.10         ;; Japan-like
-  ;set prop-personas2 0.25         ;; Japan-like
-  ;set prop-personas3 0.35         ;; Japan-like
-  ;set prop-personas4 0.30         ;; Japan-like
-  
-  ;set prop-personas1 0.40         ;; India-like
-  ;set prop-personas2 0.25         ;; India-like
-  ;set prop-personas3 0.25         ;; India-like
-  ;set prop-personas4 0.10         ;; India-like
 
 end
 
@@ -265,7 +268,7 @@ to ir-a-la-escuela
     ;; La primera vez asigna el lugar de escuela
     ;;
     ifelse mi-escuela = 0 [
-      set mi-escuela one-of patches with  [lugar = 3 and nro-personas] ;; for now, we do not set a max-personas-por-escuela
+      set mi-escuela one-of patches with  [lugar = 3] ;; for now, we do not set a max-personas-por-escuela
       set donde 3
       move-to mi-escuela
       set nro-personas nro-personas + 1

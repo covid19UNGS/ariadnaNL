@@ -36,11 +36,6 @@ globals [ total-patches
           nro-casos-sintomaticos
 
           tasa-de-ataque       ; por casa calculada al final de la epidemia
-
-          prop-personas1
-          prop-personas2
-          prop-personas3
-          prop-personas4
 ]
 
 extensions [profiler table]
@@ -84,10 +79,10 @@ to setup-ini
   ;;
   ;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
   ;;
-  set prop-personas1 0.19550259   ;; CABA
-  set prop-personas2 0.276438152  ;; CABA
-  set prop-personas3 0.364029423  ;; CABA
-  set prop-personas4 0.164029838  ;; CABA
+  ;set prop-personas1 0.19550259   ;; CABA
+  ;set prop-personas2 0.276438152  ;; CABA
+  ;set prop-personas3 0.364029423  ;; CABA
+  ;set prop-personas4 0.164029838  ;; CABA
 
   ;set prop-personas1 0.298076286  ;; Buenos Aires
   ;set prop-personas2 0.269693078  ;; Buenos Aires
@@ -194,7 +189,7 @@ to go
   ;;print (word "Prop casa: " prop-horas-en-casa)
   ;;print (word "Prop viaje: " prop-horas-en-viaje)
 
-  if ticks = 365 ;; simulation runs for 365 days
+  if ticks = 730 ;; simulation runs for 365 days
   [
     set tasa-de-ataque mean [ ( count turtles-here with [ estado > 1 ] + fallecidos ) / nro-personas ] of patches with [lugar = 1 and nro-personas > 0]
     stop
@@ -493,7 +488,6 @@ to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 
     ]
   ]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 355
@@ -881,10 +875,10 @@ nro-recuperados
 11
 
 MONITOR
-1345
-65
-1417
-110
+1410
+145
+1482
+190
 Letalidad
 nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
 3
@@ -907,10 +901,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-365
-490
-535
-523
+10
+610
+180
+643
 capacidad-de-camas
 capacidad-de-camas
 0
@@ -922,10 +916,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-365
-530
-662
-563
+10
+650
+307
+683
 proporcion-fallecimiento-saturada
 proporcion-fallecimiento-saturada
 0
@@ -948,10 +942,10 @@ nro-hospitalizados
 11
 
 SLIDER
-365
-450
-607
-483
+10
+570
+252
+603
 proporcion-hospitalizados
 proporcion-hospitalizados
 0
@@ -963,10 +957,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-550
-490
-765
-523
+195
+610
+410
+643
 fallecido-sin-hospitalizacion
 fallecido-sin-hospitalizacion
 0
@@ -1262,6 +1256,88 @@ count turtles with [estado = 9]
 17
 1
 11
+
+MONITOR
+1350
+65
+1462
+110
+Total de escuela
+cant-escuela
+17
+1
+11
+
+MONITOR
+1475
+65
+1592
+110
+Total de trabajos
+cant-trabajos
+0
+1
+11
+
+SLIDER
+545
+440
+765
+473
+prop-personas1
+prop-personas1
+0
+1
+0.205723239
+0.00000001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+545
+480
+765
+513
+prop-personas2
+prop-personas2
+0
+1
+0.261033318
+0.00000001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+545
+520
+765
+553
+prop-personas3
+prop-personas3
+0
+1
+0.379564407
+0.00000001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+545
+560
+765
+593
+prop-personas4
+prop-personas4
+0
+1
+0.153679036
+0.00000001
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## Modelo de COVID - 19
@@ -1609,6 +1685,344 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Simulation CABA" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.19550259"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.276438152"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.364029423"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.164029838"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Simulation NYC" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.205723239"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.261033318"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.379564407"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.153679036"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Simulation Japan" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.35"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Simulation India" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

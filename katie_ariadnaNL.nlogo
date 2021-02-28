@@ -80,7 +80,7 @@ to setup-ini
     set pcolor lime
     set hospital self
   ]
-  
+
   ;;
   ;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
   ;;
@@ -88,7 +88,7 @@ to setup-ini
   set prop-personas2 0.276438152  ;; CABA
   set prop-personas3 0.364029423  ;; CABA
   set prop-personas4 0.164029838  ;; CABA
- 
+
   ;set prop-personas1 0.298076286  ;; Buenos Aires
   ;set prop-personas2 0.269693078  ;; Buenos Aires
   ;set prop-personas3 0.325270827  ;; Buenos Aires
@@ -98,17 +98,17 @@ to setup-ini
   ;set prop-personas2 0.261033318  ;; NYC
   ;set prop-personas3 0.379564407  ;; NYC
   ;set prop-personas4 0.153679036  ;; NYC
-  
+
   ;set prop-personas1 0.10         ;; Japan-like
   ;set prop-personas2 0.25         ;; Japan-like
   ;set prop-personas3 0.35         ;; Japan-like
   ;set prop-personas4 0.30         ;; Japan-like
-  
+
   ;set prop-personas1 0.40         ;; India-like
   ;set prop-personas2 0.25         ;; India-like
   ;set prop-personas3 0.25         ;; India-like
   ;set prop-personas4 0.10         ;; India-like
-  
+
   ;;
   ;; Poner las personas en las casas
   ;;
@@ -221,7 +221,7 @@ to go
   ask personas1 [
   ir-a-la-escuela
   ]
-  
+
   ask turtles [
     volver-a-casa
  ]
@@ -475,13 +475,13 @@ to infeccion-local-estado [prop-horas]
 
 end
 
-to infeccion-viaje [prop-horas]   ;; includes only estados 3 or 4 b/c once they're symptomatic (5), they're bound to be home or in the hospital (and not commuting)
-
-  let nro-total-infectores count turtles with [estado = 3 or estado = 4]
-  let nro-total-personas count turtles
+to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 4 b/c once they're symptomatic (5), they're bound to be home or in the hospital (and not commuting)
+  let viajeros (turtle-set personas1 personas2 personas3)
+  let nro-total-infectores count viajeros with [estado = 3 or estado = 4]
+  let nro-total-personas count viajeros
   let mu_vi  1 - exp( - beta * nro-total-infectores / nro-total-personas * prop-horas)
   ;print (word "N: " nro-total-personas "I " nro-total-infectores "\n mu_vi: " mu_vi)
-  ask turtles [
+  ask viajeros [
     if estado = 1 [ ;; Susceptible
 
       if random-float 1 < mu_vi [
@@ -494,12 +494,6 @@ to infeccion-viaje [prop-horas]   ;; includes only estados 3 or 4 b/c once they'
   ]
 end
 
-
-
-
-to set-color-persona
-  ;;set color scale-color red estado 0 ( 9 + 1 )
-end
 @#$#@#$#@
 GRAPHICS-WINDOW
 355
@@ -653,21 +647,21 @@ NIL
 HORIZONTAL
 
 MONITOR
-875
+965
 10
-1007
+1115
 55
-Total de personas
-count personas
+Total de personas (0-17)
+count personas1
 1
 1
 11
 
 MONITOR
-1010
-10
-1117
-55
+1230
+65
+1337
+110
 Total de casas
 cant-casas
 0
@@ -692,10 +686,10 @@ NIL
 1
 
 PLOT
-875
-60
-1275
-335
+815
+65
+1215
+340
 Casos
 NIL
 NIL
@@ -707,13 +701,13 @@ true
 true
 "" ""
 PENS
-"Latentes" 1.0 0 -8990512 true "" "plot count personas with [estado = 2]"
-"Presintomatico" 1.0 0 -955883 true "" "plot count personas with [estado = 3]"
-"Asintomatico" 1.0 0 -1184463 true "" "plot count personas with [estado = 4]"
-"Sintomatico" 1.0 0 -2674135 true "" "plot count personas with [estado = 5]"
+"Latentes" 1.0 0 -8990512 true "" "plot count turtles with [estado = 2]"
+"Presintomatico" 1.0 0 -955883 true "" "plot count turtles with [estado = 3]"
+"Asintomatico" 1.0 0 -1184463 true "" "plot count turtles with [estado = 4]"
+"Sintomatico" 1.0 0 -2674135 true "" "plot count turtles with [estado = 5]"
 "Hospitalizado" 1.0 0 -10899396 true "" "plot nro-hospitalizados"
 "Fallecido" 1.0 0 -16449023 true "" "plot nro-fallecidos"
-"Leve" 1.0 0 -5509967 true "" "plot count personas with [estado = 9]"
+"Leve" 1.0 0 -5509967 true "" "plot count turtles with [estado = 9]"
 
 SLIDER
 10
@@ -806,10 +800,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1010
-445
-1122
-490
+1230
+245
+1342
+290
 Total Fallecidos
 nro-fallecidos
 2
@@ -832,54 +826,54 @@ NIL
 HORIZONTAL
 
 MONITOR
-875
-345
-990
-390
-Latentes
-count personas with [estado = 2]
+975
+355
+1125
+400
+Latentes (0-17)
+count personas1 with [estado = 2]
 2
 1
 11
 
 MONITOR
-875
-395
-992
-440
-Presintomaticos
-count personas with [estado = 3]
+975
+415
+1127
+460
+Presintomaticos (0-17)
+count personas1 with [estado = 3]
 2
 1
 11
 
 MONITOR
-875
-445
-990
-490
-Asintomaticos
-count personas with [estado = 4]
+975
+475
+1125
+520
+Asintomaticos (0-17)
+count personas1 with [estado = 4]
 2
 1
 11
 
 MONITOR
-875
-495
-990
-540
-Sintomaticos
-count personas with [estado = 5]
+975
+535
+1125
+580
+Sintomaticos (0-17)
+count personas1 with [estado = 5]
 2
 1
 11
 
 MONITOR
-1010
-495
-1120
-540
+1230
+295
+1340
+340
 Recuperados
 nro-recuperados
 2
@@ -887,10 +881,10 @@ nro-recuperados
 11
 
 MONITOR
-1125
-10
-1197
-55
+1345
+65
+1417
+110
 Letalidad
 nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
 3
@@ -915,7 +909,7 @@ HORIZONTAL
 SLIDER
 365
 490
-567
+535
 523
 capacidad-de-camas
 capacidad-de-camas
@@ -943,10 +937,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1010
-395
-1142
-440
+1230
+195
+1362
+240
 NIL
 nro-hospitalizados
 2
@@ -969,9 +963,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-575
+550
 490
-827
+765
 523
 fallecido-sin-hospitalizacion
 fallecido-sin-hospitalizacion
@@ -984,24 +978,288 @@ NIL
 HORIZONTAL
 
 MONITOR
-1010
-345
-1112
-390
-Infectado leve
-count personas with [estado = 9]
+975
+595
+1125
+640
+Infectado leve (0-17)
+count personas1 with [estado = 9]
 2
 1
 11
 
 MONITOR
-1120
-345
-1285
-390
+1230
+145
+1395
+190
 NIL
 nro-casos-sintomaticos
 2
+1
+11
+
+MONITOR
+1125
+10
+1280
+55
+Total de personas (18-34)
+count personas2
+1
+1
+11
+
+MONITOR
+1290
+10
+1445
+55
+Total de personas (35-64)
+count personas3
+17
+1
+11
+
+MONITOR
+1455
+10
+1600
+55
+Total de personas (65+)
+count personas4
+17
+1
+11
+
+MONITOR
+1135
+355
+1285
+400
+Latentes (18-34)
+count personas2 with [estado = 2]
+17
+1
+11
+
+MONITOR
+1295
+355
+1440
+400
+Latentes (35-64)
+count personas3 with [estado = 2]
+17
+1
+11
+
+MONITOR
+1450
+355
+1595
+400
+Latentes (65+)
+count personas4 with [estado = 2]
+17
+1
+11
+
+MONITOR
+1135
+415
+1285
+460
+Presintomaticos (18-34)
+count personas2 with [estado = 3]
+17
+1
+11
+
+MONITOR
+1295
+415
+1440
+460
+Presintomatics (35-64)
+count personas3 with [estado = 3]
+17
+1
+11
+
+MONITOR
+1450
+415
+1595
+460
+Presintomaticos (65+)
+count personas4 with [estado = 3]
+17
+1
+11
+
+MONITOR
+1135
+475
+1285
+520
+Asintomaticos (18-34)
+count personas2 with [estado = 4]
+17
+1
+11
+
+MONITOR
+1295
+475
+1440
+520
+Asintomaticos (35-64)
+count personas3 with [estado = 4]
+17
+1
+11
+
+MONITOR
+1450
+475
+1595
+520
+Asintomaticos (65+)
+count personas4 with [estado = 4]
+17
+1
+11
+
+MONITOR
+1135
+535
+1285
+580
+Sintomaticos (18-34)
+count personas2 with [estado = 5]
+17
+1
+11
+
+MONITOR
+1295
+535
+1440
+580
+Sintomaticos (35-64)
+count personas3 with [estado = 5]
+17
+1
+11
+
+MONITOR
+1450
+535
+1595
+580
+Sintomaticos (65+)
+count personas4 with [estado = 5]
+17
+1
+11
+
+MONITOR
+1135
+595
+1282
+640
+Infectado leve (18-34)
+count personas2 with [estado = 9]
+17
+1
+11
+
+MONITOR
+1295
+595
+1442
+640
+Infectado leve (35-64)
+count personas3 with [estado = 9]
+17
+1
+11
+
+MONITOR
+1450
+595
+1595
+640
+Infectado leve (65+)
+count personas4 with [estado = 9]
+17
+1
+11
+
+MONITOR
+815
+10
+955
+55
+Total de personas
+count turtles
+17
+1
+11
+
+MONITOR
+815
+355
+965
+400
+Latentes
+count turtles with [estado = 2]
+17
+1
+11
+
+MONITOR
+815
+415
+965
+460
+Presintomaticos
+count turtles with [estado = 3]
+17
+1
+11
+
+MONITOR
+815
+475
+965
+520
+Asintomaticos
+count turtles with [estado = 4]
+17
+1
+11
+
+MONITOR
+815
+535
+965
+580
+Sintomaticos
+count turtles with [estado = 5]
+17
+1
+11
+
+MONITOR
+815
+595
+965
+640
+Infectado leve
+count turtles with [estado = 9]
+17
 1
 11
 
@@ -1347,7 +1605,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

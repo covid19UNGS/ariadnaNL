@@ -17,7 +17,10 @@ patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
               nro-personas2
               nro-personas3
               nro-personas4
-              mu_ie             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
+              mu_ie1             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
+              mu_ie2             
+              mu_ie3
+              mu_ie4
               fallecidos        ;; Fallecidos de esa casa
               fallecidos1
               fallecidos2
@@ -44,8 +47,20 @@ globals [ total-patches
           nro-fallecidos3
           nro-fallecidos4
           nro-recuperados      ;
+          nro-recuperados1
+          nro-recuperados2
+          nro-recuperados3
+          nro-recuperados4
           nro-hospitalizados
+          nro-hospitalizados1
+          nro-hospitalizados2
+          nro-hospitalizados3
+          nro-hospitalizados4
           nro-casos-sintomaticos
+          nro-casos-sintomaticos1
+          nro-casos-sintomaticos2
+          nro-casos-sintomaticos3
+          nro-casos-sintomaticos4
 
           tasa-de-ataque       ; por casa calculada al final de la epidemia
 ]
@@ -363,21 +378,67 @@ end
 to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1) so you need to transition some to exposed (estado = 2)
 
   ask patches [
-    set nro-personas count turtles-here
-    if nro-personas > 0
+    set nro-personas1 count personas1-here
+    if nro-personas1 > 0
     [
-      let nro-infectores count turtles-here with [estado > 2 and estado < 6]
-      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
-      ;;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
+      let nro-infectores1 count personas1-here with [estado > 2 and estado < 6]
+      set mu_ie1  1 - exp( - beta1 * nro-infectores1 / nro-personas1 * prop-horas )
+      ;;show (word "N: " nro-personas1 " I: " nro-infectores1 " mu_ie: " mu_ie1 )
+    ]
+    set nro-personas2 count personas2-here
+    if nro-personas2 > 0
+    [
+      let nro-infectores2 count personas2-here with [estado > 2 and estado < 6]
+      set mu_ie2  1 - exp( - beta2 * nro-infectores2 / nro-personas2 * prop-horas )
+      ;;show (word "N: " nro-personas2 " I: " nro-infectores2 " mu_ie: " mu_ie1 )
+    ]
+    set nro-personas3 count personas3-here
+    if nro-personas3 > 0
+    [
+      let nro-infectores3 count personas3-here with [estado > 2 and estado < 6]
+      set mu_ie3  1 - exp( - beta3 * nro-infectores3 / nro-personas3 * prop-horas )
+      ;;show (word "N: " nro-personas2 " I: " nro-infectores2 " mu_ie: " mu_ie1 )
+    ]
+    set nro-personas4 count personas4-here
+    if nro-personas4 > 0
+    [
+      let nro-infectores4 count personas4-here with [estado > 2 and estado < 6]
+      set mu_ie4  1 - exp( - beta4 * nro-infectores4 / nro-personas4 * prop-horas )
+      ;;show (word "N: " nro-personas4 " I: " nro-infectores4 " mu_ie: " mu_ie1 )
     ]
   ]
-  ask turtles [
+  ask personas1 [
     if estado = 1 [ ;; Susceptible
-
-      if random-float 1 < mu_ie [     ;; if random reported number (b/w 0-1) is less than the Pr of contacting another and getting infected (mu_ie), then...
-
+      if random-float 1 < mu_ie1 [     ;; if random reported # b/w 0-1 is < Pr of contacting another and getting infected (mu_ie), then...
         set estado 2
-        ;;show (word "Clocal 1 N: " nro-personas " mu_ie: " mu_ie )
+        ;;show (word "Clocal 1 N: " nro-personas1 " mu_ie: " mu_ie1 )
+
+      ]
+    ]
+  ]
+  ask personas2 [
+    if estado = 1 [ ;; Susceptible
+      if random-float 1 < mu_ie2 [    
+        set estado 2
+        ;;show (word "Clocal 1 N: " nro-personas2 " mu_ie: " mu_ie2 )
+
+      ]
+    ]
+  ]
+  ask personas3 [
+    if estado = 1 [ ;; Susceptible
+      if random-float 1 < mu_ie3 [    
+        set estado 2
+        ;;show (word "Clocal 1 N: " nro-personas3 " mu_ie: " mu_ie3 )
+
+      ]
+    ]
+  ]
+  ask personas4 [
+    if estado = 1 [ ;; Susceptible
+      if random-float 1 < mu_ie4 [     
+        set estado 2
+        ;;show (word "Clocal 1 N: " nro-personas4 " mu_ie: " mu_ie4 )
 
       ]
     ]
@@ -389,25 +450,67 @@ end
 to infeccion-local-estado [prop-horas]
 
   ask patches [
-    set nro-personas count turtles-here
-    if nro-personas > 0
+    set nro-personas1 count personas1-here
+    if nro-personas1 > 0
     [
-      let nro-infectores count turtles-here with [estado > 2 and estado < 6]
-      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
-      ;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
+      let nro-infectores1 count personas1-here with [estado > 2 and estado < 6]
+      set mu_ie1  1 - exp( - beta1 * nro-infectores1 / nro-personas1 * prop-horas )
+      ;show (word "N: " nro-personas1 " I: " nro-infectores1 " mu_ie: " mu_ie1 )
+    ]
+  ]
+  ask patches [
+    set nro-personas2 count personas2-here
+    if nro-personas2 > 0
+    [
+      let nro-infectores2 count personas2-here with [estado > 2 and estado < 6]
+      set mu_ie2  1 - exp( - beta2 * nro-infectores2 / nro-personas2 * prop-horas )
+      ;show (word "N: " nro-personas2 " I: " nro-infectores2 " mu_ie: " mu_ie2 )
+    ]
+  ]
+  ask patches [
+    set nro-personas3 count personas3-here
+    if nro-personas3 > 0
+    [
+      let nro-infectores3 count personas3-here with [estado > 2 and estado < 6]
+      set mu_ie3  1 - exp( - beta3 * nro-infectores3 / nro-personas3 * prop-horas )
+      ;show (word "N: " nro-personas3 " I: " nro-infectores3 " mu_ie: " mu_ie3 )
+    ]
+  ]
+  ask patches [
+    set nro-personas4 count personas4-here
+    if nro-personas4 > 0
+    [
+      let nro-infectores4 count personas4-here with [estado > 2 and estado < 6]
+      set mu_ie4  1 - exp( - beta4 * nro-infectores4 / nro-personas4 * prop-horas )
+      ;show (word "N: " nro-personas4 " I: " nro-infectores4 " mu_ie: " mu_ie4 )
     ]
   ]
   ask turtles [
-    (ifelse estado = 1 [ ;; Suceptible
-
-      if random-float 1 < mu_ie [
-
-        set estado 2
-        ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
-
-
+    (ifelse 
+      estado = 1 and personas1 = TRUE [ ;; Suceptible
+        if random-float 1 < mu_ie1 [
+          set estado 2
+          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
+        ]
       ]
-     ]
+      estado = 1 and personas2 = TRUE [ ;; Suceptible
+        if random-float 1 < mu_ie2 [
+          set estado 2
+          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
+        ]
+      ]
+      estado = 1 and personas3 = TRUE [ ;; Suceptible
+        if random-float 1 < mu_ie3 [
+          set estado 2
+          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
+        ]
+      ]
+      estado = 1 and personas4 = TRUE [ ;; Suceptible
+        if random-float 1 < mu_ie4 [
+          set estado 2
+          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
+        ]
+      ]
      estado = 2 [
         if random-float 1 < gamma
         [
@@ -425,6 +528,10 @@ to infeccion-local-estado [prop-horas]
           ;show "Entra en estado 5 Sintomatico"
           set estado 5
           set nro-casos-sintomaticos nro-casos-sintomaticos + 1
+            if personas1 = TRUE [set nro-casos-sintomaticos1 nro-casos-sintomaticos1 + 1]
+            if personas2 = TRUE [set nro-casos-sintomaticos2 nro-casos-sintomaticos2 + 1]
+            if personas3 = TRUE [set nro-casos-sintomaticos3 nro-casos-sintomaticos3 + 1]
+            if personas4 = TRUE [set nro-casos-sintomaticos4 nro-casos-sintomaticos4 + 1]
         ]
      ]
      estado = 4 [
@@ -432,6 +539,10 @@ to infeccion-local-estado [prop-horas]
         [
           set estado 8
           set nro-recuperados nro-recuperados + 1
+            if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
+            if personas2 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
+            if personas3 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
+            if personas4 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
         ]
      ]
      estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-saturado
@@ -442,6 +553,10 @@ to infeccion-local-estado [prop-horas]
             ;show "Entra en estado 6 Hospitalizado"
             set estado 6
             set nro-hospitalizados nro-hospitalizados + 1
+              if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 + 1]
+              if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 + 1]
+              if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 + 1]
+              if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 + 1]
           ][
             ifelse random-float 1 < fallecido-sin-hospitalizacion [
               set estado 7
@@ -461,12 +576,24 @@ to infeccion-local-estado [prop-horas]
             if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
+                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
+                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
+                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
+                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
             ]
           ][
             if random-float 1 < rho_r [
               set estado 8
               set nro-recuperados nro-recuperados + 1
+                if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
+                if personas1 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
+                if personas1 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
+                if personas1 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
               set nro-hospitalizados nro-hospitalizados - 1
+                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
+                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
+                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
+                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
             ]
           ]
 
@@ -475,13 +602,25 @@ to infeccion-local-estado [prop-horas]
             if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
+                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
+                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
+                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
+                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
               ;;show "Sale de estado 6 a Fallecido"
             ]
           ][
             if random-float 1 < rho_r [
               set estado 8
               set nro-recuperados nro-recuperados + 1
+                if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
+                if personas1 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
+                if personas1 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
+                if personas1 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
               set nro-hospitalizados nro-hospitalizados - 1
+                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
+                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
+                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
+                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
               ;;show "Sale de estado 6 a Recuperado"
             ]
           ]
@@ -492,6 +631,10 @@ to infeccion-local-estado [prop-horas]
           ;;show (word "Entró en estado 8 donde " donde)
           set estado 8
           set nro-recuperados nro-recuperados + 1
+            if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
+            if personas1 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
+            if personas1 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
+            if personas1 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
        ]
      ]
     )
@@ -502,18 +645,50 @@ to infeccion-local-estado [prop-horas]
 end
 
 to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 4 b/c once they're symptomatic (5), they're bound to be home or in the hospital (and not commuting)
-  let viajeros (turtle-set personas1 personas2 personas3)
-  let nro-total-infectores count viajeros with [estado = 3 or estado = 4]
-  let nro-total-personas count viajeros
-  let mu_vi  1 - exp( - beta * nro-total-infectores / nro-total-personas * prop-horas)
-  ;print (word "N: " nro-total-personas "I " nro-total-infectores "\n mu_vi: " mu_vi)
-  ask viajeros [
+  let viajeros1 personas1 
+  let nro-total-infectores1 count viajeros1 with [estado = 3 or estado = 4]
+  let nro-total-personas1 count viajeros1
+  let mu_vi1  1 - exp( - beta1 * nro-total-infectores1 / nro-total-personas1 * prop-horas)
+  ;print (word "N: " nro-total-personas1 "I " nro-total-infectores1 "\n mu_vi: " mu_vi1)
+  ask viajeros1 [
     if estado = 1 [ ;; Susceptible
 
-      if random-float 1 < mu_vi [
+      if random-float 1 < mu_vi1 [
 
         set estado 2
-        ;;show (word "Cviaje N: " nro-total-infectores  " mu_vi: " mu_vi )
+        ;;show (word "Cviaje N: " nro-total-infectores1  " mu_vi: " mu_vi1 )
+
+      ]
+    ]
+  ]
+  let viajeros2 personas2 
+  let nro-total-infectores2 count viajeros2 with [estado = 3 or estado = 4]
+  let nro-total-personas2 count viajeros2
+  let mu_vi2  1 - exp( - beta2 * nro-total-infectores2 / nro-total-personas2 * prop-horas)
+  ;print (word "N: " nro-total-personas2 "I " nro-total-infectores2 "\n mu_vi: " mu_vi2)
+  ask viajeros2 [
+    if estado = 1 [ ;; Susceptible
+
+      if random-float 1 < mu_vi2 [
+
+        set estado 2
+        ;;show (word "Cviaje N: " nro-total-infectores2  " mu_vi: " mu_vi2 )
+
+      ]
+    ]
+  ]
+  let viajeros3 personas3 
+  let nro-total-infectores3 count viajeros3 with [estado = 3 or estado = 4]
+  let nro-total-personas3 count viajeros3
+  let mu_vi3  1 - exp( - beta3 * nro-total-infectores3 / nro-total-personas3 * prop-horas)
+  ;print (word "N: " nro-total-personas3 "I " nro-total-infectores3 "\n mu_vi: " mu_vi3)
+  ask viajeros3 [
+    if estado = 1 [ ;; Susceptible
+
+      if random-float 1 < mu_vi3 [
+
+        set estado 2
+        ;;show (word "Cviaje N: " nro-total-infectores3  " mu_vi: " mu_vi3 )
 
       ]
     ]

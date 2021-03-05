@@ -18,7 +18,7 @@ patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
               nro-personas3
               nro-personas4
               mu_ie1             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
-              mu_ie2             
+              mu_ie2
               mu_ie3
               mu_ie4
               fallecidos        ;; Fallecidos de esa casa
@@ -343,13 +343,13 @@ to volver-a-casa
        if personas1 = TRUE [set nro-fallecidos1 nro-fallecidos1 + 1]
        if personas2 = TRUE [set nro-fallecidos2 nro-fallecidos2 + 1]
        if personas3 = TRUE [set nro-fallecidos3 nro-fallecidos3 + 1]
-       if personas4 = TRUE [set nro-fallecidos4 nro-fallecidos4 + 1] 
+       if personas4 = TRUE [set nro-fallecidos4 nro-fallecidos4 + 1]
      move-to mi-casa
      set fallecidos fallecidos + 1
        if personas1 = TRUE [set fallecidos1 fallecidos1 + 1]
        if personas2 = TRUE [set fallecidos2 fallecidos2 + 1]
        if personas3 = TRUE [set fallecidos3 fallecidos3 + 1]
-       if personas4 = TRUE [set fallecidos4 fallecidos4 + 1]      
+       if personas4 = TRUE [set fallecidos4 fallecidos4 + 1]
      ;show (word "Fallecidos : " fallecidos "en " mi-casa)
      ;;ask mi-casa [ set fallecidos fallecidos + 1 ]
      die
@@ -418,7 +418,7 @@ to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1)
   ]
   ask personas2 [
     if estado = 1 [ ;; Susceptible
-      if random-float 1 < mu_ie2 [    
+      if random-float 1 < mu_ie2 [
         set estado 2
         ;;show (word "Clocal 1 N: " nro-personas2 " mu_ie: " mu_ie2 )
 
@@ -427,7 +427,7 @@ to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1)
   ]
   ask personas3 [
     if estado = 1 [ ;; Susceptible
-      if random-float 1 < mu_ie3 [    
+      if random-float 1 < mu_ie3 [
         set estado 2
         ;;show (word "Clocal 1 N: " nro-personas3 " mu_ie: " mu_ie3 )
 
@@ -436,7 +436,7 @@ to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1)
   ]
   ask personas4 [
     if estado = 1 [ ;; Susceptible
-      if random-float 1 < mu_ie4 [     
+      if random-float 1 < mu_ie4 [
         set estado 2
         ;;show (word "Clocal 1 N: " nro-personas4 " mu_ie: " mu_ie4 )
 
@@ -486,7 +486,7 @@ to infeccion-local-estado [prop-horas]
     ]
   ]
   ask turtles [
-    (ifelse 
+    (ifelse
       estado = 1 and personas1 = TRUE [ ;; Suceptible
         if random-float 1 < mu_ie1 [
           set estado 2
@@ -645,7 +645,7 @@ to infeccion-local-estado [prop-horas]
 end
 
 to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 4 b/c once they're symptomatic (5), they're bound to be home or in the hospital (and not commuting)
-  let viajeros1 personas1 
+  let viajeros1 personas1
   let nro-total-infectores1 count viajeros1 with [estado = 3 or estado = 4]
   let nro-total-personas1 count viajeros1
   let mu_vi1  1 - exp( - beta1 * nro-total-infectores1 / nro-total-personas1 * prop-horas)
@@ -661,7 +661,7 @@ to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 
       ]
     ]
   ]
-  let viajeros2 personas2 
+  let viajeros2 personas2
   let nro-total-infectores2 count viajeros2 with [estado = 3 or estado = 4]
   let nro-total-personas2 count viajeros2
   let mu_vi2  1 - exp( - beta2 * nro-total-infectores2 / nro-total-personas2 * prop-horas)
@@ -677,7 +677,7 @@ to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 
       ]
     ]
   ]
-  let viajeros3 personas3 
+  let viajeros3 personas3
   let nro-total-infectores3 count viajeros3 with [estado = 3 or estado = 4]
   let nro-total-personas3 count viajeros3
   let mu_vi3  1 - exp( - beta3 * nro-total-infectores3 / nro-total-personas3 * prop-horas)
@@ -694,6 +694,7 @@ to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 
     ]
   ]
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 355
@@ -1001,9 +1002,9 @@ HORIZONTAL
 
 MONITOR
 1230
-245
-1342
-290
+230
+1345
+275
 Total Fallecidos
 nro-fallecidos
 2
@@ -1071,20 +1072,20 @@ count personas1 with [estado = 5]
 
 MONITOR
 1230
-295
-1340
-340
-Recuperados
+285
+1345
+330
+Total Recuperados
 nro-recuperados
 2
 1
 11
 
 MONITOR
-1410
-145
-1482
-190
+1605
+65
+1677
+110
 Letalidad
 nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
 3
@@ -1130,7 +1131,7 @@ proporcion-fallecimiento-saturada
 proporcion-fallecimiento-saturada
 0
 1
-0.4
+0.41
 0.01
 1
 NIL
@@ -1138,10 +1139,10 @@ HORIZONTAL
 
 MONITOR
 1230
-195
-1362
-240
-NIL
+175
+1345
+220
+Total Hospitalizados
 nro-hospitalizados
 2
 1
@@ -1190,10 +1191,10 @@ count personas1 with [estado = 9]
 
 MONITOR
 1230
-145
-1395
-190
-NIL
+120
+1345
+165
+Total Sintomaticos
 nro-casos-sintomaticos
 2
 1
@@ -1494,7 +1495,7 @@ prop-personas1
 prop-personas1
 0
 1
-0.205723239
+0.20572325
 0.00000001
 1
 NIL
@@ -1509,7 +1510,7 @@ prop-personas2
 prop-personas2
 0
 1
-0.261033318
+0.26103331
 0.00000001
 1
 NIL
@@ -1544,6 +1545,242 @@ prop-personas4
 1
 NIL
 HORIZONTAL
+
+SLIDER
+10
+700
+182
+733
+beta1
+beta1
+0
+1
+0.38
+.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+190
+700
+362
+733
+beta2
+beta2
+0
+1
+0.36
+.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+370
+700
+542
+733
+beta3
+beta3
+0
+1
+0.37
+.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+550
+700
+722
+733
+beta4
+beta4
+0
+1
+0.37
+.01
+1
+NIL
+HORIZONTAL
+
+MONITOR
+1355
+120
+1455
+165
+Total Sint (0-17)
+nro-casos-sintomaticos1
+2
+1
+11
+
+MONITOR
+1480
+120
+1590
+165
+Total Sint (18-34)
+nro-casos-sintomaticos2
+2
+1
+11
+
+MONITOR
+1610
+120
+1720
+165
+Total Sint (35-64)
+nro-casos-sintomaticos3
+2
+1
+11
+
+MONITOR
+1740
+120
+1835
+165
+Total Sint (65+)
+nro-casos-sintomaticos4
+2
+1
+11
+
+MONITOR
+1355
+175
+1465
+220
+Total Hosp (0-17)
+nro-hospitalizados1
+2
+1
+11
+
+MONITOR
+1480
+175
+1595
+220
+Total Hosp (18-34)
+nro-hospitalizados2
+2
+1
+11
+
+MONITOR
+1610
+175
+1725
+220
+Total Hosp (35-64)
+nro-hospitalizados3
+2
+1
+11
+
+MONITOR
+1740
+175
+1845
+220
+Total Hosp (65+)
+nro-hospitalizados4
+2
+1
+11
+
+MONITOR
+1355
+230
+1465
+275
+Total Fall (0-17)
+nro-fallecidos1
+2
+1
+11
+
+MONITOR
+1480
+230
+1597
+275
+Total Fall (18-34)
+nro-fallecidos2
+2
+1
+11
+
+MONITOR
+1610
+230
+1727
+275
+Total Fall (35-64)
+nro-fallecidos3
+2
+1
+11
+
+MONITOR
+1740
+230
+1847
+275
+Total Fall (65+)
+nro-fallecidos4
+2
+1
+11
+
+MONITOR
+1355
+285
+1470
+330
+Total Recup (0-17)
+nro-recuperados1
+2
+1
+11
+
+MONITOR
+1480
+285
+1600
+330
+Total Recup (18-34)
+nro-recuperados2
+2
+1
+11
+
+MONITOR
+1610
+285
+1730
+330
+Total Recup (35-64)
+nro-recuperados3
+2
+1
+11
+
+MONITOR
+1740
+285
+1850
+330
+Total Recup (65+)
+nro-recuperados4
+2
+1
+11
 
 @#$#@#$#@
 ## Modelo de COVID - 19

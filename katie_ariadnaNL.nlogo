@@ -13,8 +13,16 @@ turtles-own [ estado            ; 1 suceptible, 2 latente, 3 presintomatico , 4 
              ]
 patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
               nro-personas
+              nro-personas1
+              nro-personas2
+              nro-personas3
+              nro-personas4
               mu_ie             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
               fallecidos        ;; Fallecidos de esa casa
+              fallecidos1
+              fallecidos2
+              fallecidos3
+              fallecidos4
 ]
 
 globals [ total-patches
@@ -22,7 +30,7 @@ globals [ total-patches
           cant-casas
           cant-escuela
           hospital             ; patch hospital
-          horas-en-casa        ; horas en el trabajo
+          horas-en-casa        ; horas-en-trabajo and horas-en-viaje are set as sliders
           horas-de-dormir
           gamma                ; periodo-latencia
           lambda_p             ; periodo-presintomatico
@@ -31,6 +39,10 @@ globals [ total-patches
           rho_d                ; hospitalizacion de los que fallecen
           rho_r                ; hospitalizacion de los recuperados
           nro-fallecidos       ;
+          nro-fallecidos1
+          nro-fallecidos2
+          nro-fallecidos3
+          nro-fallecidos4
           nro-recuperados      ;
           nro-hospitalizados
           nro-casos-sintomaticos
@@ -77,28 +89,20 @@ to setup-ini
   ]
 
   ;;
-  ;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
+  ;; See slider to set age distribution or see code below
   ;;
   ;set prop-personas1 0.19550259   ;; CABA
   ;set prop-personas2 0.276438152  ;; CABA
   ;set prop-personas3 0.364029423  ;; CABA
   ;set prop-personas4 0.164029838  ;; CABA
-
-  ;set prop-personas1 0.298076286  ;; Buenos Aires
-  ;set prop-personas2 0.269693078  ;; Buenos Aires
-  ;set prop-personas3 0.325270827  ;; Buenos Aires
-  ;set prop-personas4 0.106959809  ;; Buenos Aires
-
   ;set prop-personas1 0.205723239  ;; NYC
   ;set prop-personas2 0.261033318  ;; NYC
   ;set prop-personas3 0.379564407  ;; NYC
   ;set prop-personas4 0.153679036  ;; NYC
-
   ;set prop-personas1 0.10         ;; Japan-like
   ;set prop-personas2 0.25         ;; Japan-like
   ;set prop-personas3 0.35         ;; Japan-like
   ;set prop-personas4 0.30         ;; Japan-like
-
   ;set prop-personas1 0.40         ;; India-like
   ;set prop-personas2 0.25         ;; India-like
   ;set prop-personas3 0.25         ;; India-like
@@ -189,7 +193,7 @@ to go
   ;;print (word "Prop casa: " prop-horas-en-casa)
   ;;print (word "Prop viaje: " prop-horas-en-viaje)
 
-  if ticks = 730 ;; simulation runs for 365 days
+  if ticks = 730 ;; simulation runs for 730 days
   [
     set tasa-de-ataque mean [ ( count turtles-here with [ estado > 1 ] + fallecidos ) / nro-personas ] of patches with [lugar = 1 and nro-personas > 0]
     stop
@@ -239,7 +243,9 @@ to ir-al-trabajo
       set donde 2
       move-to mi-trabajo
       set nro-personas nro-personas + 1
-      ;;show  word mi-trabajo nro-personas    ;; if we expand nro-personas(1-4), how do we set this variable? Do we need to create separate "ir-al-trabajo" commands for personas2 (young adults) and personas3 (older adults)?
+        if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
+        if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
+      ;;show  word mi-trabajo nro-personas
     ]
     [
       (ifelse donde = 1 [
@@ -267,6 +273,7 @@ to ir-a-la-escuela
       set donde 3
       move-to mi-escuela
       set nro-personas nro-personas + 1
+        if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
     ]
     [
       (ifelse donde = 1 [
@@ -292,22 +299,42 @@ to volver-a-casa
         ;;fd 0.2
         set donde 1
         set nro-personas nro-personas + 1
+          if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
+          if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
+          if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
+          if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
       ]
    ]
    estado = 6 [
-     if donde != 3
+     if donde != 4
      [
         move-to hospital
         ;;fd 0.2
-        set donde 3
+        set donde 4
         set nro-personas nro-personas + 1
+          if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
+          if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
+          if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
+          if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
      ]
    ]
    estado = 7 [
      set nro-personas nro-personas - 1
+       if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
+       if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
+       if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
+       if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
      set nro-fallecidos nro-fallecidos + 1
+       if personas1 = TRUE [set nro-fallecidos1 nro-fallecidos1 + 1]
+       if personas2 = TRUE [set nro-fallecidos2 nro-fallecidos2 + 1]
+       if personas3 = TRUE [set nro-fallecidos3 nro-fallecidos3 + 1]
+       if personas4 = TRUE [set nro-fallecidos4 nro-fallecidos4 + 1] 
      move-to mi-casa
      set fallecidos fallecidos + 1
+       if personas1 = TRUE [set fallecidos1 fallecidos1 + 1]
+       if personas2 = TRUE [set fallecidos2 fallecidos2 + 1]
+       if personas3 = TRUE [set fallecidos3 fallecidos3 + 1]
+       if personas4 = TRUE [set fallecidos4 fallecidos4 + 1]      
      ;show (word "Fallecidos : " fallecidos "en " mi-casa)
      ;;ask mi-casa [ set fallecidos fallecidos + 1 ]
      die
@@ -320,6 +347,10 @@ to volver-a-casa
         ;;fd 0.2
         set donde 1
         set nro-personas nro-personas + 1
+          if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
+          if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
+          if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
+          if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
      ]
   ]
   )

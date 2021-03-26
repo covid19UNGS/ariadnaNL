@@ -13,19 +13,8 @@ turtles-own [ estado            ; 1 suceptible, 2 latente, 3 presintomatico , 4 
              ]
 patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
               nro-personas
-              nro-personas1
-              nro-personas2
-              nro-personas3
-              nro-personas4
-              mu_ie1             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
-              mu_ie2
-              mu_ie3
-              mu_ie4
+              mu_ie             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
               fallecidos        ;; Fallecidos de esa casa
-              fallecidos1
-              fallecidos2
-              fallecidos3
-              fallecidos4
 ]
 
 globals [ total-patches
@@ -33,7 +22,7 @@ globals [ total-patches
           cant-casas
           cant-escuela
           hospital             ; patch hospital
-          horas-en-casa        ; horas-en-trabajo and horas-en-viaje are set as sliders
+          horas-en-casa        ; horas en el trabajo
           horas-de-dormir
           gamma                ; periodo-latencia
           lambda_p             ; periodo-presintomatico
@@ -42,32 +31,11 @@ globals [ total-patches
           rho_d                ; hospitalizacion de los que fallecen
           rho_r                ; hospitalizacion de los recuperados
           nro-fallecidos       ;
-          nro-fallecidos1
-          nro-fallecidos2
-          nro-fallecidos3
-          nro-fallecidos4
           nro-recuperados      ;
-          nro-recuperados1
-          nro-recuperados2
-          nro-recuperados3
-          nro-recuperados4
           nro-hospitalizados
-          nro-hospitalizados1
-          nro-hospitalizados2
-          nro-hospitalizados3
-          nro-hospitalizados4
           nro-casos-sintomaticos
-          nro-casos-sintomaticos1
-          nro-casos-sintomaticos2
-          nro-casos-sintomaticos3
-          nro-casos-sintomaticos4
 
           tasa-de-ataque       ; por casa calculada al final de la epidemia
-
-          prop-personas1
-          prop-personas2
-          prop-personas3
-          prop-personas4
 ]
 
 extensions [profiler table]
@@ -109,33 +77,28 @@ to setup-ini
   ]
 
   ;;
-  ;; See slider to set age distribution or see code below
+  ;; Sets age distribution (1) 0-17 anos, (2) 18-34, (3) 35-64, (5) 65+
   ;;
-<<<<<<< HEAD
   ;set prop-personas1 0.19550259   ;; CABA
   ;set prop-personas2 0.276438152  ;; CABA
   ;set prop-personas3 0.364029423  ;; CABA
   ;set prop-personas4 0.164029838  ;; CABA
-=======
-  set prop-personas1 0.19550259   ;; CABA
-  set prop-personas2 0.276438152  ;; CABA
-  set prop-personas3 0.364029423  ;; CABA
-  set prop-personas4 0.164029838  ;; CABA
 
   ;set prop-personas1 0.298076286  ;; Buenos Aires
   ;set prop-personas2 0.269693078  ;; Buenos Aires
   ;set prop-personas3 0.325270827  ;; Buenos Aires
   ;set prop-personas4 0.106959809  ;; Buenos Aires
 
->>>>>>> parent of 61f3227 (Adjusted simulation time to 730 days/2 years, adn repositioned sliders on GUI.)
   ;set prop-personas1 0.205723239  ;; NYC
   ;set prop-personas2 0.261033318  ;; NYC
   ;set prop-personas3 0.379564407  ;; NYC
   ;set prop-personas4 0.153679036  ;; NYC
+
   ;set prop-personas1 0.10         ;; Japan-like
   ;set prop-personas2 0.25         ;; Japan-like
   ;set prop-personas3 0.35         ;; Japan-like
   ;set prop-personas4 0.30         ;; Japan-like
+
   ;set prop-personas1 0.40         ;; India-like
   ;set prop-personas2 0.25         ;; India-like
   ;set prop-personas3 0.25         ;; India-like
@@ -226,11 +189,7 @@ to go
   ;;print (word "Prop casa: " prop-horas-en-casa)
   ;;print (word "Prop viaje: " prop-horas-en-viaje)
 
-<<<<<<< HEAD
-  if ticks = 730 ;; simulation runs for 730 days
-=======
-  if ticks = 365 ;; simulation runs for 365 days
->>>>>>> parent of 61f3227 (Adjusted simulation time to 730 days/2 years, adn repositioned sliders on GUI.)
+  if ticks = 730 ;; simulation runs for 365 days
   [
     set tasa-de-ataque mean [ ( count turtles-here with [ estado > 1 ] + fallecidos ) / nro-personas ] of patches with [lugar = 1 and nro-personas > 0]
     stop
@@ -280,9 +239,7 @@ to ir-al-trabajo
       set donde 2
       move-to mi-trabajo
       set nro-personas nro-personas + 1
-        if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
-        if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
-      ;;show  word mi-trabajo nro-personas
+      ;;show  word mi-trabajo nro-personas    ;; if we expand nro-personas(1-4), how do we set this variable? Do we need to create separate "ir-al-trabajo" commands for personas2 (young adults) and personas3 (older adults)?
     ]
     [
       (ifelse donde = 1 [
@@ -310,7 +267,6 @@ to ir-a-la-escuela
       set donde 3
       move-to mi-escuela
       set nro-personas nro-personas + 1
-        if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
     ]
     [
       (ifelse donde = 1 [
@@ -336,10 +292,6 @@ to volver-a-casa
         ;;fd 0.2
         set donde 1
         set nro-personas nro-personas + 1
-          if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
-          if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
-          if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
-          if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
       ]
    ]
    estado = 6 [
@@ -349,29 +301,13 @@ to volver-a-casa
         ;;fd 0.2
         set donde 4
         set nro-personas nro-personas + 1
-          if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
-          if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
-          if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
-          if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
      ]
    ]
    estado = 7 [
      set nro-personas nro-personas - 1
-       if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
-       if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
-       if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
-       if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
      set nro-fallecidos nro-fallecidos + 1
-       if personas1 = TRUE [set nro-fallecidos1 nro-fallecidos1 + 1]
-       if personas2 = TRUE [set nro-fallecidos2 nro-fallecidos2 + 1]
-       if personas3 = TRUE [set nro-fallecidos3 nro-fallecidos3 + 1]
-       if personas4 = TRUE [set nro-fallecidos4 nro-fallecidos4 + 1]
      move-to mi-casa
      set fallecidos fallecidos + 1
-       if personas1 = TRUE [set fallecidos1 fallecidos1 + 1]
-       if personas2 = TRUE [set fallecidos2 fallecidos2 + 1]
-       if personas3 = TRUE [set fallecidos3 fallecidos3 + 1]
-       if personas4 = TRUE [set fallecidos4 fallecidos4 + 1]
      ;show (word "Fallecidos : " fallecidos "en " mi-casa)
      ;;ask mi-casa [ set fallecidos fallecidos + 1 ]
      die
@@ -384,10 +320,6 @@ to volver-a-casa
         ;;fd 0.2
         set donde 1
         set nro-personas nro-personas + 1
-          if personas1 = TRUE [set nro-personas1 nro-personas1 + 1]
-          if personas2 = TRUE [set nro-personas2 nro-personas2 + 1]
-          if personas3 = TRUE [set nro-personas3 nro-personas3 + 1]
-          if personas4 = TRUE [set nro-personas4 nro-personas4 + 1]
      ]
   ]
   )
@@ -400,67 +332,21 @@ end
 to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1) so you need to transition some to exposed (estado = 2)
 
   ask patches [
-    set nro-personas1 count personas1-here
-    if nro-personas1 > 0
+    set nro-personas count turtles-here
+    if nro-personas > 0
     [
-      let nro-infectores1 count personas1-here with [estado > 2 and estado < 6]
-      set mu_ie1  1 - exp( - beta1 * nro-infectores1 / nro-personas1 * prop-horas )
-      ;;show (word "N: " nro-personas1 " I: " nro-infectores1 " mu_ie: " mu_ie1 )
-    ]
-    set nro-personas2 count personas2-here
-    if nro-personas2 > 0
-    [
-      let nro-infectores2 count personas2-here with [estado > 2 and estado < 6]
-      set mu_ie2  1 - exp( - beta2 * nro-infectores2 / nro-personas2 * prop-horas )
-      ;;show (word "N: " nro-personas2 " I: " nro-infectores2 " mu_ie: " mu_ie1 )
-    ]
-    set nro-personas3 count personas3-here
-    if nro-personas3 > 0
-    [
-      let nro-infectores3 count personas3-here with [estado > 2 and estado < 6]
-      set mu_ie3  1 - exp( - beta3 * nro-infectores3 / nro-personas3 * prop-horas )
-      ;;show (word "N: " nro-personas2 " I: " nro-infectores2 " mu_ie: " mu_ie1 )
-    ]
-    set nro-personas4 count personas4-here
-    if nro-personas4 > 0
-    [
-      let nro-infectores4 count personas4-here with [estado > 2 and estado < 6]
-      set mu_ie4  1 - exp( - beta4 * nro-infectores4 / nro-personas4 * prop-horas )
-      ;;show (word "N: " nro-personas4 " I: " nro-infectores4 " mu_ie: " mu_ie1 )
+      let nro-infectores count turtles-here with [estado > 2 and estado < 6]
+      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
+      ;;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
-  ask personas1 [
+  ask turtles [
     if estado = 1 [ ;; Susceptible
-      if random-float 1 < mu_ie1 [     ;; if random reported # b/w 0-1 is < Pr of contacting another and getting infected (mu_ie), then...
-        set estado 2
-        ;;show (word "Clocal 1 N: " nro-personas1 " mu_ie: " mu_ie1 )
 
-      ]
-    ]
-  ]
-  ask personas2 [
-    if estado = 1 [ ;; Susceptible
-      if random-float 1 < mu_ie2 [
-        set estado 2
-        ;;show (word "Clocal 1 N: " nro-personas2 " mu_ie: " mu_ie2 )
+      if random-float 1 < mu_ie [     ;; if random reported number (b/w 0-1) is less than the Pr of contacting another and getting infected (mu_ie), then...
 
-      ]
-    ]
-  ]
-  ask personas3 [
-    if estado = 1 [ ;; Susceptible
-      if random-float 1 < mu_ie3 [
         set estado 2
-        ;;show (word "Clocal 1 N: " nro-personas3 " mu_ie: " mu_ie3 )
-
-      ]
-    ]
-  ]
-  ask personas4 [
-    if estado = 1 [ ;; Susceptible
-      if random-float 1 < mu_ie4 [
-        set estado 2
-        ;;show (word "Clocal 1 N: " nro-personas4 " mu_ie: " mu_ie4 )
+        ;;show (word "Clocal 1 N: " nro-personas " mu_ie: " mu_ie )
 
       ]
     ]
@@ -472,67 +358,25 @@ end
 to infeccion-local-estado [prop-horas]
 
   ask patches [
-    set nro-personas1 count personas1-here
-    if nro-personas1 > 0
+    set nro-personas count turtles-here
+    if nro-personas > 0
     [
-      let nro-infectores1 count personas1-here with [estado > 2 and estado < 6]
-      set mu_ie1  1 - exp( - beta1 * nro-infectores1 / nro-personas1 * prop-horas )
-      ;show (word "N: " nro-personas1 " I: " nro-infectores1 " mu_ie: " mu_ie1 )
-    ]
-  ]
-  ask patches [
-    set nro-personas2 count personas2-here
-    if nro-personas2 > 0
-    [
-      let nro-infectores2 count personas2-here with [estado > 2 and estado < 6]
-      set mu_ie2  1 - exp( - beta2 * nro-infectores2 / nro-personas2 * prop-horas )
-      ;show (word "N: " nro-personas2 " I: " nro-infectores2 " mu_ie: " mu_ie2 )
-    ]
-  ]
-  ask patches [
-    set nro-personas3 count personas3-here
-    if nro-personas3 > 0
-    [
-      let nro-infectores3 count personas3-here with [estado > 2 and estado < 6]
-      set mu_ie3  1 - exp( - beta3 * nro-infectores3 / nro-personas3 * prop-horas )
-      ;show (word "N: " nro-personas3 " I: " nro-infectores3 " mu_ie: " mu_ie3 )
-    ]
-  ]
-  ask patches [
-    set nro-personas4 count personas4-here
-    if nro-personas4 > 0
-    [
-      let nro-infectores4 count personas4-here with [estado > 2 and estado < 6]
-      set mu_ie4  1 - exp( - beta4 * nro-infectores4 / nro-personas4 * prop-horas )
-      ;show (word "N: " nro-personas4 " I: " nro-infectores4 " mu_ie: " mu_ie4 )
+      let nro-infectores count turtles-here with [estado > 2 and estado < 6]
+      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
+      ;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
   ask turtles [
-    (ifelse
-      estado = 1 and personas1 = TRUE [ ;; Suceptible
-        if random-float 1 < mu_ie1 [
-          set estado 2
-          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
-        ]
+    (ifelse estado = 1 [ ;; Suceptible
+
+      if random-float 1 < mu_ie [
+
+        set estado 2
+        ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
+
+
       ]
-      estado = 1 and personas2 = TRUE [ ;; Suceptible
-        if random-float 1 < mu_ie2 [
-          set estado 2
-          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
-        ]
-      ]
-      estado = 1 and personas3 = TRUE [ ;; Suceptible
-        if random-float 1 < mu_ie3 [
-          set estado 2
-          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
-        ]
-      ]
-      estado = 1 and personas4 = TRUE [ ;; Suceptible
-        if random-float 1 < mu_ie4 [
-          set estado 2
-          ;;show (word "Clocal 2 N: " nro-personas " mu_ie: " mu_ie )
-        ]
-      ]
+     ]
      estado = 2 [
         if random-float 1 < gamma
         [
@@ -550,10 +394,6 @@ to infeccion-local-estado [prop-horas]
           ;show "Entra en estado 5 Sintomatico"
           set estado 5
           set nro-casos-sintomaticos nro-casos-sintomaticos + 1
-            if personas1 = TRUE [set nro-casos-sintomaticos1 nro-casos-sintomaticos1 + 1]
-            if personas2 = TRUE [set nro-casos-sintomaticos2 nro-casos-sintomaticos2 + 1]
-            if personas3 = TRUE [set nro-casos-sintomaticos3 nro-casos-sintomaticos3 + 1]
-            if personas4 = TRUE [set nro-casos-sintomaticos4 nro-casos-sintomaticos4 + 1]
         ]
      ]
      estado = 4 [
@@ -561,10 +401,6 @@ to infeccion-local-estado [prop-horas]
         [
           set estado 8
           set nro-recuperados nro-recuperados + 1
-            if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
-            if personas2 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
-            if personas3 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
-            if personas4 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
         ]
      ]
      estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-saturado
@@ -575,10 +411,6 @@ to infeccion-local-estado [prop-horas]
             ;show "Entra en estado 6 Hospitalizado"
             set estado 6
             set nro-hospitalizados nro-hospitalizados + 1
-              if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 + 1]
-              if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 + 1]
-              if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 + 1]
-              if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 + 1]
           ][
             ifelse random-float 1 < fallecido-sin-hospitalizacion [
               set estado 7
@@ -598,24 +430,12 @@ to infeccion-local-estado [prop-horas]
             if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
-                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
-                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
-                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
-                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
             ]
           ][
             if random-float 1 < rho_r [
               set estado 8
               set nro-recuperados nro-recuperados + 1
-                if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
-                if personas1 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
-                if personas1 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
-                if personas1 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
               set nro-hospitalizados nro-hospitalizados - 1
-                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
-                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
-                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
-                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
             ]
           ]
 
@@ -624,25 +444,13 @@ to infeccion-local-estado [prop-horas]
             if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
-                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
-                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
-                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
-                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
               ;;show "Sale de estado 6 a Fallecido"
             ]
           ][
             if random-float 1 < rho_r [
               set estado 8
               set nro-recuperados nro-recuperados + 1
-                if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
-                if personas1 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
-                if personas1 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
-                if personas1 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
               set nro-hospitalizados nro-hospitalizados - 1
-                if personas1 = TRUE [set nro-hospitalizados1 nro-hospitalizados1 - 1]
-                if personas2 = TRUE [set nro-hospitalizados2 nro-hospitalizados2 - 1]
-                if personas3 = TRUE [set nro-hospitalizados3 nro-hospitalizados3 - 1]
-                if personas4 = TRUE [set nro-hospitalizados4 nro-hospitalizados4 - 1]
               ;;show "Sale de estado 6 a Recuperado"
             ]
           ]
@@ -653,10 +461,6 @@ to infeccion-local-estado [prop-horas]
           ;;show (word "Entró en estado 8 donde " donde)
           set estado 8
           set nro-recuperados nro-recuperados + 1
-            if personas1 = TRUE [set nro-recuperados1 nro-recuperados1 + 1]
-            if personas1 = TRUE [set nro-recuperados2 nro-recuperados2 + 1]
-            if personas1 = TRUE [set nro-recuperados3 nro-recuperados3 + 1]
-            if personas1 = TRUE [set nro-recuperados4 nro-recuperados4 + 1]
        ]
      ]
     )
@@ -667,56 +471,23 @@ to infeccion-local-estado [prop-horas]
 end
 
 to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 4 b/c once they're symptomatic (5), they're bound to be home or in the hospital (and not commuting)
-  let viajeros1 personas1
-  let nro-total-infectores1 count viajeros1 with [estado = 3 or estado = 4]
-  let nro-total-personas1 count viajeros1
-  let mu_vi1  1 - exp( - beta1 * nro-total-infectores1 / nro-total-personas1 * prop-horas)
-  ;print (word "N: " nro-total-personas1 "I " nro-total-infectores1 "\n mu_vi: " mu_vi1)
-  ask viajeros1 [
+  let viajeros (turtle-set personas1 personas2 personas3)
+  let nro-total-infectores count viajeros with [estado = 3 or estado = 4]
+  let nro-total-personas count viajeros
+  let mu_vi  1 - exp( - beta * nro-total-infectores / nro-total-personas * prop-horas)
+  ;print (word "N: " nro-total-personas "I " nro-total-infectores "\n mu_vi: " mu_vi)
+  ask viajeros [
     if estado = 1 [ ;; Susceptible
 
-      if random-float 1 < mu_vi1 [
+      if random-float 1 < mu_vi [
 
         set estado 2
-        ;;show (word "Cviaje N: " nro-total-infectores1  " mu_vi: " mu_vi1 )
-
-      ]
-    ]
-  ]
-  let viajeros2 personas2
-  let nro-total-infectores2 count viajeros2 with [estado = 3 or estado = 4]
-  let nro-total-personas2 count viajeros2
-  let mu_vi2  1 - exp( - beta2 * nro-total-infectores2 / nro-total-personas2 * prop-horas)
-  ;print (word "N: " nro-total-personas2 "I " nro-total-infectores2 "\n mu_vi: " mu_vi2)
-  ask viajeros2 [
-    if estado = 1 [ ;; Susceptible
-
-      if random-float 1 < mu_vi2 [
-
-        set estado 2
-        ;;show (word "Cviaje N: " nro-total-infectores2  " mu_vi: " mu_vi2 )
-
-      ]
-    ]
-  ]
-  let viajeros3 personas3
-  let nro-total-infectores3 count viajeros3 with [estado = 3 or estado = 4]
-  let nro-total-personas3 count viajeros3
-  let mu_vi3  1 - exp( - beta3 * nro-total-infectores3 / nro-total-personas3 * prop-horas)
-  ;print (word "N: " nro-total-personas3 "I " nro-total-infectores3 "\n mu_vi: " mu_vi3)
-  ask viajeros3 [
-    if estado = 1 [ ;; Susceptible
-
-      if random-float 1 < mu_vi3 [
-
-        set estado 2
-        ;;show (word "Cviaje N: " nro-total-infectores3  " mu_vi: " mu_vi3 )
+        ;;show (word "Cviaje N: " nro-total-infectores  " mu_vi: " mu_vi )
 
       ]
     ]
   ]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 355
@@ -1024,9 +795,9 @@ HORIZONTAL
 
 MONITOR
 1230
-230
-1345
-275
+245
+1342
+290
 Total Fallecidos
 nro-fallecidos
 2
@@ -1094,26 +865,20 @@ count personas1 with [estado = 5]
 
 MONITOR
 1230
-285
-1345
-330
-Total Recuperados
+295
+1340
+340
+Recuperados
 nro-recuperados
 2
 1
 11
 
 MONITOR
-<<<<<<< HEAD
-1605
-65
-1677
-=======
-1345
-65
-1417
->>>>>>> parent of 61f3227 (Adjusted simulation time to 730 days/2 years, adn repositioned sliders on GUI.)
-110
+1410
+145
+1482
+190
 Letalidad
 nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
 3
@@ -1136,10 +901,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-365
-490
-535
-523
+10
+610
+180
+643
 capacidad-de-camas
 capacidad-de-camas
 0
@@ -1151,15 +916,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-365
-530
-662
-563
+10
+650
+307
+683
 proporcion-fallecimiento-saturada
 proporcion-fallecimiento-saturada
 0
 1
-0.41
+0.4
 0.01
 1
 NIL
@@ -1167,20 +932,20 @@ HORIZONTAL
 
 MONITOR
 1230
-175
-1345
-220
-Total Hospitalizados
+195
+1362
+240
+NIL
 nro-hospitalizados
 2
 1
 11
 
 SLIDER
-365
-450
-607
-483
+10
+570
+252
+603
 proporcion-hospitalizados
 proporcion-hospitalizados
 0
@@ -1192,10 +957,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-550
-490
-765
-523
+195
+610
+410
+643
 fallecido-sin-hospitalizacion
 fallecido-sin-hospitalizacion
 0
@@ -1219,10 +984,10 @@ count personas1 with [estado = 9]
 
 MONITOR
 1230
-120
-1345
-165
-Total Sintomaticos
+145
+1395
+190
+NIL
 nro-casos-sintomaticos
 2
 1
@@ -1492,7 +1257,6 @@ count turtles with [estado = 9]
 1
 11
 
-<<<<<<< HEAD
 MONITOR
 1350
 65
@@ -1524,7 +1288,7 @@ prop-personas1
 prop-personas1
 0
 1
-0.20572325
+0.205723239
 0.00000001
 1
 NIL
@@ -1539,7 +1303,7 @@ prop-personas2
 prop-personas2
 0
 1
-0.26103331
+0.261033318
 0.00000001
 1
 NIL
@@ -1575,244 +1339,6 @@ prop-personas4
 NIL
 HORIZONTAL
 
-SLIDER
-10
-700
-182
-733
-beta1
-beta1
-0
-1
-0.38
-.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-190
-700
-362
-733
-beta2
-beta2
-0
-1
-0.36
-.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-370
-700
-542
-733
-beta3
-beta3
-0
-1
-0.37
-.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-550
-700
-722
-733
-beta4
-beta4
-0
-1
-0.37
-.01
-1
-NIL
-HORIZONTAL
-
-MONITOR
-1355
-120
-1455
-165
-Total Sint (0-17)
-nro-casos-sintomaticos1
-2
-1
-11
-
-MONITOR
-1480
-120
-1590
-165
-Total Sint (18-34)
-nro-casos-sintomaticos2
-2
-1
-11
-
-MONITOR
-1610
-120
-1720
-165
-Total Sint (35-64)
-nro-casos-sintomaticos3
-2
-1
-11
-
-MONITOR
-1740
-120
-1835
-165
-Total Sint (65+)
-nro-casos-sintomaticos4
-2
-1
-11
-
-MONITOR
-1355
-175
-1465
-220
-Total Hosp (0-17)
-nro-hospitalizados1
-2
-1
-11
-
-MONITOR
-1480
-175
-1595
-220
-Total Hosp (18-34)
-nro-hospitalizados2
-2
-1
-11
-
-MONITOR
-1610
-175
-1725
-220
-Total Hosp (35-64)
-nro-hospitalizados3
-2
-1
-11
-
-MONITOR
-1740
-175
-1845
-220
-Total Hosp (65+)
-nro-hospitalizados4
-2
-1
-11
-
-MONITOR
-1355
-230
-1465
-275
-Total Fall (0-17)
-nro-fallecidos1
-2
-1
-11
-
-MONITOR
-1480
-230
-1597
-275
-Total Fall (18-34)
-nro-fallecidos2
-2
-1
-11
-
-MONITOR
-1610
-230
-1727
-275
-Total Fall (35-64)
-nro-fallecidos3
-2
-1
-11
-
-MONITOR
-1740
-230
-1847
-275
-Total Fall (65+)
-nro-fallecidos4
-2
-1
-11
-
-MONITOR
-1355
-285
-1470
-330
-Total Recup (0-17)
-nro-recuperados1
-2
-1
-11
-
-MONITOR
-1480
-285
-1600
-330
-Total Recup (18-34)
-nro-recuperados2
-2
-1
-11
-
-MONITOR
-1610
-285
-1730
-330
-Total Recup (35-64)
-nro-recuperados3
-2
-1
-11
-
-MONITOR
-1740
-285
-1850
-330
-Total Recup (65+)
-nro-recuperados4
-2
-1
-11
-
-=======
->>>>>>> parent of 61f3227 (Adjusted simulation time to 730 days/2 years, adn repositioned sliders on GUI.)
 @#$#@#$#@
 ## Modelo de COVID - 19
 
@@ -2159,6 +1685,344 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Simulation CABA" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.19550259"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.276438152"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.364029423"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.164029838"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Simulation NYC" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.205723239"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.261033318"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.379564407"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.153679036"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Simulation Japan" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.35"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Simulation India" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <metric>count turtles with [estado = 1]</metric>
+    <metric>count turtles with [estado = 2]</metric>
+    <metric>count turtles with [estado = 3]</metric>
+    <metric>count turtles with [estado = 4]</metric>
+    <metric>count turtles with [estado = 5]</metric>
+    <metric>count turtles with [estado = 6]</metric>
+    <metric>count turtles with [estado = 7]</metric>
+    <metric>count turtles with [estado = 8]</metric>
+    <metric>count turtles with [estado = 9]</metric>
+    <metric>nro-casos-sintomaticos</metric>
+    <metric>nro-hospitalizados</metric>
+    <metric>nro-fallecidos</metric>
+    <metric>nro-recuperados</metric>
+    <enumeratedValueSet variable="capacidad-de-camas">
+      <value value="225"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-viaje">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-latencia">
+      <value value="3.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Horas-en-trabajo">
+      <value value="7.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-fallecimiento-saturada">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta">
+      <value value="0.37"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-pre-hospitalizacion">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-presintomatico">
+      <value value="1.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-casa">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-fallecimiento-hospitalizados">
+      <value value="0.12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-recuperado">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Proporcion-asintomaticos">
+      <value value="0.43"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proporcion-hospitalizados">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-personas-por-trabajo">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fallecido-sin-hospitalizacion">
+      <value value="0.006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-hospitalizacion-fallecido">
+      <value value="13.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infectados-iniciales">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="periodo-asintomatico">
+      <value value="6.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas1">
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas2">
+      <value value="0.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas3">
+      <value value="0.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prop-personas4">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

@@ -54,19 +54,18 @@ to setup-ini
   ;;
   set cant-trabajos total-patches / 3
   set cant-escuela 3
-  set cant-casas total-patches - cant-trabajos - cant-escuela - 1
-
+  set cant-casas total-patches - cant-trabajos - cant-escuela - 1 + 1;; 
   ;; show (word cant-trabajos " " cant-casas)
 
   ask n-of cant-casas patches [
     set lugar 1
     set pcolor magenta
   ]
-  ask n-of cant-trabajos patches with [lugar != 1] [
+  ask n-of cant-trabajos patches with [lugar = 0] [
     set lugar 2
     set pcolor blue
   ]
-  ask n-of cant-escuela patches with [lugar != 1 or lugar != 2] [
+  ask n-of cant-escuela patches with [lugar = 0] [
     set lugar 3
     set pcolor orange
   ]

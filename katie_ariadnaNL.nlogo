@@ -13,6 +13,10 @@ turtles-own [ estado            ; 1 suceptible, 2 latente, 3 presintomatico , 4 
              ]
 patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
               nro-personas
+              nro-personas1
+              nro-personas2
+              nro-personas3
+              nro-personas4
               mu_ie             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
               fallecidos        ;; Fallecidos de esa casa
 ]
@@ -238,7 +242,7 @@ to ir-al-trabajo
       set donde 2
       move-to mi-trabajo
       set nro-personas nro-personas + 1
-      ;;show  word mi-trabajo nro-personas    ;; if we expand nro-personas(1-4), how do we set this variable? Do we need to create separate "ir-al-trabajo" commands for personas2 (young adults) and personas3 (older adults)?
+      ;;show  word mi-trabajo nro-personas    
     ]
     [
       (ifelse donde = 1 [
@@ -264,7 +268,7 @@ to ir-a-la-escuela
     ifelse mi-escuela = 0 [
       set mi-escuela one-of patches with  [lugar = 3] ;; for now, we do not set a max-personas-por-escuela
       set donde 3
-      move-to mi-escuela
+      move-to mi-escuela ;; this command is not working as expected
       set nro-personas nro-personas + 1
     ]
     [
@@ -332,6 +336,10 @@ to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1)
 
   ask patches [
     set nro-personas count turtles-here
+    set nro-personas1 count personas1-here
+    set nro-personas2 count personas2-here
+    set nro-personas3 count personas3-here
+    set nro-personas4 count personas4-here
     if nro-personas > 0
     [
       let nro-infectores count turtles-here with [estado > 2 and estado < 6]
@@ -356,9 +364,9 @@ end
 ;;
 to infeccion-local-estado [prop-horas]
 
-  ask patches [
-    set nro-personas count turtles-here
-    if nro-personas > 0
+  ask patches [ 
+    set nro-personas count turtles-here 
+    if nro-personas > 0 ;; only applies to mi-casa b/c this command comes after volver-a-casa
     [
       let nro-infectores count turtles-here with [estado > 2 and estado < 6]
       set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )

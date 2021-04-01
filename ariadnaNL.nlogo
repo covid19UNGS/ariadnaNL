@@ -125,7 +125,7 @@ to go
   ;;print (word "Prop casa: " prop-horas-en-casa)
   ;;print (word "Prop viaje: " prop-horas-en-viaje)
 
-  if ticks = 365 ;; simulation runs for 365 days
+  if ticks = 730 ;; simulation runs for 365 days
   [
     set tasa-de-ataque mean [ ( count personas-here with [ estado > 1 ] + fallecidos ) / nro-personas ] of patches with [lugar = 1 and nro-personas > 0]
     stop

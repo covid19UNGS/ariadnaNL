@@ -25,6 +25,7 @@ globals [ total-patches
           cant-trabajos
           cant-casas
           cant-escuela
+          cant-hospitales
           hospital             ; patch hospital
           horas-en-casa        ; horas en el trabajo
           horas-de-dormir
@@ -58,7 +59,8 @@ to setup-ini
   ;;
   set cant-trabajos total-patches / 3
   set cant-escuela 3
-  set cant-casas total-patches - cant-trabajos - cant-escuela - 1 + 1;; 
+  set cant-hospitales 2
+  set cant-casas total-patches - cant-trabajos - cant-escuela - cant-hospitales;;
   ;; show (word cant-trabajos " " cant-casas)
 
   ask n-of cant-casas patches [
@@ -117,6 +119,7 @@ to setup-ini
         set donde 1
         set estado 1 ;; suceptible
         set mi-casa patch-here
+        set color gray
         ;set-color-persona
         fd 0.2
       ]
@@ -242,7 +245,7 @@ to ir-al-trabajo
       set donde 2
       move-to mi-trabajo
       set nro-personas nro-personas + 1
-      ;;show  word mi-trabajo nro-personas    
+      ;;show  word mi-trabajo nro-personas
     ]
     [
       (ifelse donde = 1 [
@@ -270,13 +273,15 @@ to ir-a-la-escuela
       set donde 3
       move-to mi-escuela ;; this command is not working as expected
       set nro-personas nro-personas + 1
+      ;show "Asigno escuela"
     ]
     [
       (ifelse donde = 1 [
         move-to mi-escuela
-        ;;lt 10
-        ;;fd 0.2
+        ;lt 10
+        ;fd 0.2
         set donde 3
+        ;show "Me fui a la escuela"
         ]
         donde = 3 [
           show (word "Nadie se queda a dormir en la escuela! Estado " estado)
@@ -294,7 +299,9 @@ to volver-a-casa
         ;;rt 10
         ;;fd 0.2
         set donde 1
-        set nro-personas nro-personas + 1
+        set nro-personas nro-personas + 1        ;;; Para que cuenta el numero de personas si despues lo vuelve a contar en la infeccion-local????????????????????
+        ;show "vuelvo a casa"
+        set color color + 10
       ]
    ]
    estado = 6 [
@@ -364,8 +371,8 @@ end
 ;;
 to infeccion-local-estado [prop-horas]
 
-  ask patches [ 
-    set nro-personas count turtles-here 
+  ask patches [
+    set nro-personas count turtles-here
     if nro-personas > 0 ;; only applies to mi-casa b/c this command comes after volver-a-casa
     [
       let nro-infectores count turtles-here with [estado > 2 and estado < 6]
@@ -499,11 +506,11 @@ end
 GRAPHICS-WINDOW
 355
 10
-767
-423
+765
+421
 -1
 -1
-4.0
+2.0
 1
 10
 1
@@ -513,10 +520,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--50
-50
--50
-50
+-100
+100
+-100
+100
 1
 1
 1
@@ -1310,7 +1317,7 @@ prop-personas2
 prop-personas2
 0
 1
-0.261033318
+0.2195122
 0.00000001
 1
 NIL
@@ -1325,7 +1332,7 @@ prop-personas3
 prop-personas3
 0
 1
-0.379564407
+0.24878049
 0.00000001
 1
 NIL
@@ -1340,7 +1347,7 @@ prop-personas4
 prop-personas4
 0
 1
-0.153679036
+0.26829268
 0.00000001
 1
 NIL

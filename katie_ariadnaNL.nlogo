@@ -206,9 +206,15 @@ to go
   ask personas2 [
     ir-al-trabajo
   ]
+
   ask personas3 [
     ir-al-trabajo
   ]
+
+  ask personas1 [
+    ir-a-la-escuela
+  ]
+
   ;;
   ;; La infección en el viaje toma la proporcion de infectados 3 y 4 globales
   ;;
@@ -219,9 +225,7 @@ to go
   ;;
   infeccion-local prop-horas-en-trabajo
 
-  ask personas1 [
-  ir-a-la-escuela
-  ]
+
 
   ask turtles [
     volver-a-casa
@@ -350,7 +354,7 @@ to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1)
     if nro-personas > 0
     [
       let nro-infectores count turtles-here with [estado > 2 and estado < 6]
-      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
+      set mu_ie  1 - exp( - ((beta1 * nro-infectores1) + (beta2 * nro-infectores2) + (beta3 * nro-infectores3) + (beta4 * nro-infectores4))  / nro-personas * prop-horas )
       ;;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
@@ -417,7 +421,7 @@ to infeccion-local-estado [prop-horas]
           set nro-recuperados nro-recuperados + 1
         ]
      ]
-     estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-saturado
+     estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-cado
         if random-float 1 < lambda_h
         [
           ifelse random-float 1 < proporcion-hospitalizados
@@ -506,11 +510,11 @@ end
 GRAPHICS-WINDOW
 355
 10
-765
-421
+783
+439
 -1
 -1
-2.0
+20.0
 1
 10
 1
@@ -520,12 +524,12 @@ GRAPHICS-WINDOW
 1
 1
 1
--100
-100
--100
-100
-1
-1
+-10
+10
+-10
+10
+0
+0
 1
 ticks
 30.0
@@ -1317,7 +1321,7 @@ prop-personas2
 prop-personas2
 0
 1
-0.2195122
+0.0097561
 0.00000001
 1
 NIL
@@ -1332,7 +1336,7 @@ prop-personas3
 prop-personas3
 0
 1
-0.24878049
+0.0
 0.00000001
 1
 NIL
@@ -1347,7 +1351,7 @@ prop-personas4
 prop-personas4
 0
 1
-0.26829268
+0.0
 0.00000001
 1
 NIL

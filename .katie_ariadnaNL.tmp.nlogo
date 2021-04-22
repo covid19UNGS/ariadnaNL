@@ -13,6 +13,7 @@ turtles-own [ estado            ; 1 suceptible, 2 latente, 3 presintomatico , 4 
              ]
 patches-own [ lugar             ;; 1=casa, 2=trabajo, 3=escuela, 4=hospital
               nro-personas
+              nro-personas1
               mu_ie             ;; de infectados a latentes del parche (counts the # transitioning from exposed to)
               fallecidos        ;; Fallecidos de esa casa
 ]
@@ -21,7 +22,6 @@ globals [ total-patches
           cant-trabajos
           cant-casas
           cant-escuela
-          cant-hospitales
           hospital             ; patch hospital
           horas-en-casa        ; horas en el trabajo
           horas-de-dormir
@@ -32,16 +32,8 @@ globals [ total-patches
           rho_d                ; hospitalizacion de los que fallecen
           rho_r                ; hospitalizacion de los recuperados
           nro-fallecidos       ;
-          nro-fallecidos1
-          nro-fallecidos2
-          nro-fallecidos3
-          nro-fallecidos4
           nro-recuperados      ;
           nro-hospitalizados
-          nro-hospitalizados1
-          nro-hospitalizados2
-          nro-hospitalizados3
-          nro-hospitalizados4
           nro-casos-sintomaticos
 
           tasa-de-ataque       ; por casa calculada al final de la epidemia
@@ -63,8 +55,7 @@ to setup-ini
   ;;
   set cant-trabajos total-patches / 3
   set cant-escuela 3
-  set cant-hospitales 2
-  set cant-casas total-patches - cant-trabajos - cant-escuela - cant-hospitales;;
+  set cant-casas total-patches - cant-trabajos - cant-escuela - 1 + 1;;
   ;; show (word cant-trabajos " " cant-casas)
 
   ask n-of cant-casas patches [
@@ -123,7 +114,6 @@ to setup-ini
         set donde 1
         set estado 1 ;; suceptible
         set mi-casa patch-here
-        set color gray
         ;set-color-persona
         fd 0.2
       ]
@@ -210,15 +200,9 @@ to go
   ask personas2 [
     ir-al-trabajo
   ]
-
   ask personas3 [
     ir-al-trabajo
   ]
-
-  ask personas1 [
-    ir-a-la-escuela
-  ]
-
   ;;
   ;; La infección en el viaje toma la proporcion de infectados 3 y 4 globales
   ;;
@@ -229,7 +213,9 @@ to go
   ;;
   infeccion-local prop-horas-en-trabajo
 
-
+  ask personas1 [
+  ir-a-la-escuela
+  ]
 
   ask turtles [
     volver-a-casa
@@ -253,7 +239,7 @@ to ir-al-trabajo
       set donde 2
       move-to mi-trabajo
       set nro-personas nro-personas + 1
-      ;;show  word mi-trabajo nro-personas
+      ;;show  word mi-trabajo nro-personas    ;; if we expand nro-personas(1-4), how do we set this variable? Do we need to create separate "ir-al-trabajo" commands for personas2 (young adults) and personas3 (older adults)?
     ]
     [
       (ifelse donde = 1 [
@@ -279,17 +265,15 @@ to ir-a-la-escuela
     ifelse mi-escuela = 0 [
       set mi-escuela one-of patches with  [lugar = 3] ;; for now, we do not set a max-personas-por-escuela
       set donde 3
-      move-to mi-escuela ;; this command is not working as expected
+      move-to mi-escuela
       set nro-personas nro-personas + 1
-      ;show "Asigno escuela"
     ]
     [
       (ifelse donde = 1 [
         move-to mi-escuela
-        ;lt 10
-        ;fd 0.2
+        ;;lt 10
+        ;;fd 0.2
         set donde 3
-        ;show "Me fui a la escuela"
         ]
         donde = 3 [
           show (word "Nadie se queda a dormir en la escuela! Estado " estado)
@@ -307,9 +291,7 @@ to volver-a-casa
         ;;rt 10
         ;;fd 0.2
         set donde 1
-        set nro-personas nro-personas + 1        ;;; Para que cuenta el numero de personas si despues lo vuelve a contar en la infeccion-local????????????????????
-        ;show "vuelvo a casa"
-        set color color + 10
+        set nro-personas nro-personas + 1
       ]
    ]
    estado = 6 [
@@ -324,10 +306,6 @@ to volver-a-casa
    estado = 7 [
      set nro-personas nro-personas - 1
      set nro-fallecidos nro-fallecidos + 1
-     set nro-fallecidos1 count personas1 with [estado = 7]
-     set nro-fallecidos2 count personas2 with [estado = 7]
-     set nro-fallecidos3 count personas3 with [estado = 7]
-     set nro-fallecidos4 count personas4 with [estado = 7]
      move-to mi-casa
      set fallecidos fallecidos + 1
      ;show (word "Fallecidos : " fallecidos "en " mi-casa)
@@ -358,11 +336,7 @@ to infeccion-local [prop-horas]   ;; initially, all are susceptible (estado = 1)
     if nro-personas > 0
     [
       let nro-infectores count turtles-here with [estado > 2 and estado < 6]
-      let nro-infectores1 count personas1-here with [estado > 2 and estado < 6]
-      let nro-infectores2 count personas2-here with [estado > 2 and estado < 6]
-      let nro-infectores3 count personas3-here with [estado > 2 and estado < 6]
-      let nro-infectores4 count personas4-here with [estado > 2 and estado < 6]
-      set mu_ie  1 - exp( - ((beta1 * nro-infectores1) + (beta2 * nro-infectores2) + (beta3 * nro-infectores3) + (beta4 * nro-infectores4)) / nro-personas * prop-horas )
+      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
       ;;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
@@ -385,14 +359,12 @@ to infeccion-local-estado [prop-horas]
 
   ask patches [
     set nro-personas count turtles-here
-    if nro-personas > 0 ;; only applies to mi-casa b/c this command comes after volver-a-casa
+    set nro-personas1 count personas1-here
+
+    if nro-personas > 0
     [
       let nro-infectores count turtles-here with [estado > 2 and estado < 6]
-      let nro-infectores1 count personas1-here with [estado > 2 and estado < 6]
-      let nro-infectores2 count personas2-here with [estado > 2 and estado < 6]
-      let nro-infectores3 count personas3-here with [estado > 2 and estado < 6]
-      let nro-infectores4 count personas4-here with [estado > 2 and estado < 6]
-      set mu_ie  1 - exp( - ((beta1 * nro-infectores1) + (beta2 * nro-infectores2) + (beta3 * nro-infectores3) + (beta4 * nro-infectores4)) / nro-personas * prop-horas )
+      set mu_ie  1 - exp( - beta * nro-infectores / nro-personas * prop-horas )
       ;show (word "N: " nro-personas " I: " nro-infectores " mu_ie: " mu_ie )
     ]
   ]
@@ -433,7 +405,7 @@ to infeccion-local-estado [prop-horas]
           set nro-recuperados nro-recuperados + 1
         ]
      ]
-     estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-cado
+     estado = 5 [                                    ;; Si se supera la cantidad de camas pasaria a 7 u 8 proporcion-fallecimiento-saturado
         if random-float 1 < lambda_h
         [
           ifelse random-float 1 < proporcion-hospitalizados
@@ -441,10 +413,6 @@ to infeccion-local-estado [prop-horas]
             ;show "Entra en estado 6 Hospitalizado"
             set estado 6
             set nro-hospitalizados nro-hospitalizados + 1
-            set nro-hospitalizados1 count personas1 with [estado = 6]
-            set nro-hospitalizados2 count personas2 with [estado = 6]
-            set nro-hospitalizados3 count personas3 with [estado = 6]
-            set nro-hospitalizados4 count personas4 with [estado = 6]
           ][
             ifelse random-float 1 < fallecido-sin-hospitalizacion [
               set estado 7
@@ -464,21 +432,12 @@ to infeccion-local-estado [prop-horas]
             if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
-              set nro-hospitalizados1 count personas1 with [estado = 6]
-              set nro-hospitalizados2 count personas2 with [estado = 6]
-              set nro-hospitalizados3 count personas3 with [estado = 6]
-              set nro-hospitalizados4 count personas4 with [estado = 6]
             ]
           ][
             if random-float 1 < rho_r [
               set estado 8
               set nro-recuperados nro-recuperados + 1
               set nro-hospitalizados nro-hospitalizados - 1
-              set nro-hospitalizados1 count personas1 with [estado = 6]
-              set nro-hospitalizados2 count personas2 with [estado = 6]
-              set nro-hospitalizados3 count personas3 with [estado = 6]
-              set nro-hospitalizados4 count personas4 with [estado = 6]
-
             ]
           ]
 
@@ -487,10 +446,6 @@ to infeccion-local-estado [prop-horas]
             if random-float 1 < rho_d [
               set estado 7
               set nro-hospitalizados nro-hospitalizados - 1
-              set nro-hospitalizados1 count personas1 with [estado = 6]
-              set nro-hospitalizados2 count personas2 with [estado = 6]
-              set nro-hospitalizados3 count personas3 with [estado = 6]
-              set nro-hospitalizados4 count personas4 with [estado = 6]
               ;;show "Sale de estado 6 a Fallecido"
             ]
           ][
@@ -498,10 +453,6 @@ to infeccion-local-estado [prop-horas]
               set estado 8
               set nro-recuperados nro-recuperados + 1
               set nro-hospitalizados nro-hospitalizados - 1
-              set nro-hospitalizados1 count personas1 with [estado = 6]
-              set nro-hospitalizados2 count personas2 with [estado = 6]
-              set nro-hospitalizados3 count personas3 with [estado = 6]
-              set nro-hospitalizados4 count personas4 with [estado = 6]
               ;;show "Sale de estado 6 a Recuperado"
             ]
           ]
@@ -524,12 +475,8 @@ end
 to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 4 b/c once they're symptomatic (5), they're bound to be home or in the hospital (and not commuting)
   let viajeros (turtle-set personas1 personas2 personas3)
   let nro-total-infectores count viajeros with [estado = 3 or estado = 4]
-  let nro-total-infectores1 count personas1 with [estado = 3 or estado = 4] ; or personas1-here?
-  let nro-total-infectores2 count personas2 with [estado = 3 or estado = 4]
-  let nro-total-infectores3 count personas3 with [estado = 3 or estado = 4]
   let nro-total-personas count viajeros
-  let mu_vi  1 - exp( - ((beta1 * nro-total-infectores1) + (beta2 * nro-total-infectores2) + (beta3 * nro-total-infectores3)) / nro-total-personas * prop-horas)
-
+  let mu_vi  1 - exp( - beta * nro-total-infectores / nro-total-personas * prop-horas)
   ;print (word "N: " nro-total-personas "I " nro-total-infectores "\n mu_vi: " mu_vi)
   ask viajeros [
     if estado = 1 [ ;; Susceptible
@@ -545,13 +492,13 @@ to infeccion-viaje [prop-horas]   ;; includes only personas1-3 AND estados 3 or 
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-409
-0
-787
-379
+355
+10
+767
+423
 -1
 -1
-17.62
+4.0
 1
 10
 1
@@ -561,12 +508,12 @@ GRAPHICS-WINDOW
 1
 1
 1
--10
-10
--10
-10
-0
-0
+-50
+50
+-50
+50
+1
+1
 1
 ticks
 30.0
@@ -850,9 +797,9 @@ HORIZONTAL
 
 MONITOR
 1230
-230
+245
 1342
-275
+290
 Total Fallecidos
 nro-fallecidos
 2
@@ -876,9 +823,9 @@ HORIZONTAL
 
 MONITOR
 975
-395
+355
 1125
-440
+400
 Latentes (0-17)
 count personas1 with [estado = 2]
 2
@@ -887,9 +834,9 @@ count personas1 with [estado = 2]
 
 MONITOR
 975
-455
+415
 1127
-500
+460
 Presintomaticos (0-17)
 count personas1 with [estado = 3]
 2
@@ -898,9 +845,9 @@ count personas1 with [estado = 3]
 
 MONITOR
 975
-515
+475
 1125
-560
+520
 Asintomaticos (0-17)
 count personas1 with [estado = 4]
 2
@@ -909,9 +856,9 @@ count personas1 with [estado = 4]
 
 MONITOR
 975
-575
+535
 1125
-620
+580
 Sintomaticos (0-17)
 count personas1 with [estado = 5]
 2
@@ -920,9 +867,9 @@ count personas1 with [estado = 5]
 
 MONITOR
 1230
-285
+295
 1340
-330
+340
 Recuperados
 nro-recuperados
 2
@@ -930,10 +877,10 @@ nro-recuperados
 11
 
 MONITOR
-1230
-340
-1302
-385
+1410
+145
+1482
+190
 Letalidad
 nro-fallecidos / ( nro-recuperados + nro-fallecidos ) * 100
 3
@@ -987,9 +934,9 @@ HORIZONTAL
 
 MONITOR
 1230
-175
+195
 1362
-220
+240
 NIL
 nro-hospitalizados
 2
@@ -1028,9 +975,9 @@ HORIZONTAL
 
 MONITOR
 975
-635
+595
 1125
-680
+640
 Infectado leve (0-17)
 count personas1 with [estado = 9]
 2
@@ -1039,9 +986,9 @@ count personas1 with [estado = 9]
 
 MONITOR
 1230
-120
+145
 1395
-165
+190
 NIL
 nro-casos-sintomaticos
 2
@@ -1083,9 +1030,9 @@ count personas4
 
 MONITOR
 1135
-395
+355
 1285
-440
+400
 Latentes (18-34)
 count personas2 with [estado = 2]
 17
@@ -1094,9 +1041,9 @@ count personas2 with [estado = 2]
 
 MONITOR
 1295
-395
+355
 1440
-440
+400
 Latentes (35-64)
 count personas3 with [estado = 2]
 17
@@ -1105,9 +1052,9 @@ count personas3 with [estado = 2]
 
 MONITOR
 1450
-395
+355
 1595
-440
+400
 Latentes (65+)
 count personas4 with [estado = 2]
 17
@@ -1116,9 +1063,9 @@ count personas4 with [estado = 2]
 
 MONITOR
 1135
-455
+415
 1285
-500
+460
 Presintomaticos (18-34)
 count personas2 with [estado = 3]
 17
@@ -1127,9 +1074,9 @@ count personas2 with [estado = 3]
 
 MONITOR
 1295
-455
+415
 1440
-500
+460
 Presintomatics (35-64)
 count personas3 with [estado = 3]
 17
@@ -1138,9 +1085,9 @@ count personas3 with [estado = 3]
 
 MONITOR
 1450
-455
+415
 1595
-500
+460
 Presintomaticos (65+)
 count personas4 with [estado = 3]
 17
@@ -1149,9 +1096,9 @@ count personas4 with [estado = 3]
 
 MONITOR
 1135
-515
+475
 1285
-560
+520
 Asintomaticos (18-34)
 count personas2 with [estado = 4]
 17
@@ -1160,9 +1107,9 @@ count personas2 with [estado = 4]
 
 MONITOR
 1295
-515
+475
 1440
-560
+520
 Asintomaticos (35-64)
 count personas3 with [estado = 4]
 17
@@ -1171,9 +1118,9 @@ count personas3 with [estado = 4]
 
 MONITOR
 1450
-515
+475
 1595
-560
+520
 Asintomaticos (65+)
 count personas4 with [estado = 4]
 17
@@ -1182,9 +1129,9 @@ count personas4 with [estado = 4]
 
 MONITOR
 1135
-575
+535
 1285
-620
+580
 Sintomaticos (18-34)
 count personas2 with [estado = 5]
 17
@@ -1193,9 +1140,9 @@ count personas2 with [estado = 5]
 
 MONITOR
 1295
-575
+535
 1440
-620
+580
 Sintomaticos (35-64)
 count personas3 with [estado = 5]
 17
@@ -1204,9 +1151,9 @@ count personas3 with [estado = 5]
 
 MONITOR
 1450
-575
+535
 1595
-620
+580
 Sintomaticos (65+)
 count personas4 with [estado = 5]
 17
@@ -1215,9 +1162,9 @@ count personas4 with [estado = 5]
 
 MONITOR
 1135
-635
+595
 1282
-680
+640
 Infectado leve (18-34)
 count personas2 with [estado = 9]
 17
@@ -1226,9 +1173,9 @@ count personas2 with [estado = 9]
 
 MONITOR
 1295
-635
+595
 1442
-680
+640
 Infectado leve (35-64)
 count personas3 with [estado = 9]
 17
@@ -1237,9 +1184,9 @@ count personas3 with [estado = 9]
 
 MONITOR
 1450
-635
+595
 1595
-680
+640
 Infectado leve (65+)
 count personas4 with [estado = 9]
 17
@@ -1259,9 +1206,9 @@ count turtles
 
 MONITOR
 815
-395
+355
 965
-440
+400
 Latentes
 count turtles with [estado = 2]
 17
@@ -1270,9 +1217,9 @@ count turtles with [estado = 2]
 
 MONITOR
 815
-455
+415
 965
-500
+460
 Presintomaticos
 count turtles with [estado = 3]
 17
@@ -1281,9 +1228,9 @@ count turtles with [estado = 3]
 
 MONITOR
 815
-515
+475
 965
-560
+520
 Asintomaticos
 count turtles with [estado = 4]
 17
@@ -1292,9 +1239,9 @@ count turtles with [estado = 4]
 
 MONITOR
 815
-575
+535
 965
-620
+580
 Sintomaticos
 count turtles with [estado = 5]
 17
@@ -1303,9 +1250,9 @@ count turtles with [estado = 5]
 
 MONITOR
 815
-635
+595
 965
-680
+640
 Infectado leve
 count turtles with [estado = 9]
 17
@@ -1343,7 +1290,7 @@ prop-personas1
 prop-personas1
 0
 1
-0.53658537
+0.205723239
 0.00000001
 1
 NIL
@@ -1358,7 +1305,7 @@ prop-personas2
 prop-personas2
 0
 1
-0.0
+0.261033318
 0.00000001
 1
 NIL
@@ -1373,7 +1320,7 @@ prop-personas3
 prop-personas3
 0
 1
-0.0
+0.379564407
 0.00000001
 1
 NIL
@@ -1388,159 +1335,11 @@ prop-personas4
 prop-personas4
 0
 1
-0.0
+0.153679036
 0.00000001
 1
 NIL
 HORIZONTAL
-
-SLIDER
-10
-700
-182
-733
-beta1
-beta1
-0
-1
-0.37
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-10
-740
-182
-773
-beta2
-beta2
-0
-1
-0.37
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-10
-780
-182
-813
-beta3
-beta3
-0
-1
-0.37
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-10
-820
-182
-853
-beta4
-beta4
-0
-1
-0.37
-0.01
-1
-NIL
-HORIZONTAL
-
-MONITOR
-1405
-170
-1540
-215
-NIL
-nro-hospitalizados1
-2
-1
-11
-
-MONITOR
-1405
-225
-1542
-270
-NIL
-nro-hospitalizados2
-2
-1
-11
-
-MONITOR
-1405
-280
-1542
-325
-NIL
-nro-hospitalizados3
-2
-1
-11
-
-MONITOR
-1405
-335
-1542
-380
-NIL
-nro-hospitalizados4
-17
-1
-11
-
-MONITOR
-1555
-170
-1662
-215
-NIL
-nro-fallecidos1
-2
-1
-11
-
-MONITOR
-1555
-225
-1662
-270
-NIL
-nro-fallecidos2
-2
-1
-11
-
-MONITOR
-1555
-280
-1662
-325
-NIL
-nro-fallecidos3
-2
-1
-11
-
-MONITOR
-1555
-335
-1662
-380
-NIL
-nro-fallecidos4
-2
-1
-11
 
 @#$#@#$#@
 ## Modelo de COVID - 19

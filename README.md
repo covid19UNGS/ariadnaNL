@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/271881435.svg)](https://zenodo.org/badge/latestdoi/271881435)
 
 # ariadnaNL
 
